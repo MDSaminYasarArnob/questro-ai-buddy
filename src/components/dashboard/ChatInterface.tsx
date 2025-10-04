@@ -1,23 +1,77 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Send, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [loading, setLoading] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadApiKey();
+  }, [user]);
+
+  const loadApiKey = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('api_keys')
+      .select('api_key')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    setApiKey(data?.api_key || null);
+  };
 
   const handleSend = async () => {
     if (!message.trim()) return;
 
-    toast({
-      title: "Coming Soon",
-      description: "Please add your Gemini API key in Settings to start chatting",
-    });
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please add your Gemini API key in Settings first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userMessage = message;
+    setMessage('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { message: userMessage, apiKey }
+      });
+
+      if (error) throw error;
+
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+
+      // Save to history
+      await supabase.from('chat_history').insert({
+        user_id: user!.id,
+        title: userMessage.substring(0, 50),
+        type: 'chat',
+        messages: [...messages, { role: 'user', content: userMessage }, { role: 'assistant', content: data.response }]
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to get response",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

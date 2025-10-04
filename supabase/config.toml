@@ -1,1 +1,10 @@
 project_id = "irqfyjrlpfpdjztvxahs"
+
+[functions.chat]
+verify_jwt = false
+
+[functions.solve-image]
+verify_jwt = false
+
+[functions.convert-pdf-mcq]
+verify_jwt = false
