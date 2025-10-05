@@ -11,36 +11,11 @@ const ChatInterface = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadApiKey();
-  }, [user]);
-
-  const loadApiKey = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('api_keys')
-      .select('api_key')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    setApiKey(data?.api_key || null);
-  };
-
   const handleSend = async () => {
     if (!message.trim()) return;
-
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please add your Gemini API key in Settings first",
-        variant: "destructive",
-      });
-      return;
-    }
 
     const userMessage = message;
     setMessage('');
@@ -49,7 +24,7 @@ const ChatInterface = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message: userMessage, apiKey }
+        body: { message: userMessage }
       });
 
       if (error) throw error;
