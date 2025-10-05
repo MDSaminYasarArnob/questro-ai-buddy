@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Copy, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -11,8 +11,22 @@ const ChatInterface = () => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [loading, setLoading] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const copyToClipboard = async (text: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -70,7 +84,7 @@ const ChatInterface = () => {
             messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
               >
                 <div
                   className={`max-w-[80%] p-4 rounded-lg ${
@@ -81,6 +95,26 @@ const ChatInterface = () => {
                 >
                   {msg.content}
                 </div>
+                {msg.role === 'assistant' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(msg.content, idx)}
+                    className="mt-1 h-6 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {copiedIndex === idx ? (
+                      <>
+                        <Check className="w-3 h-3 mr-1" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 mr-1" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             ))
           )}
