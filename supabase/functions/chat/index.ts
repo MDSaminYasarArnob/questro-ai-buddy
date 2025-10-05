@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message } = await req.json();
+    const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
@@ -31,9 +31,10 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a helpful AI study assistant. Provide clear, concise, and educational responses to help students learn.' },
-          { role: 'user', content: message }
+          { role: 'system', content: 'You are a helpful AI study assistant. Provide clear, concise, and educational responses to help students learn. Remember the conversation context and refer to previous messages when relevant.' },
+          ...messages
         ],
+        stream: true,
       }),
     });
 
@@ -61,13 +62,10 @@ serve(async (req) => {
       );
     }
 
-    const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || 'No response generated';
-
-    return new Response(
-      JSON.stringify({ response: aiResponse }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Return the stream directly
+    return new Response(response.body, {
+      headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
+    });
   } catch (error) {
     console.error('Chat function error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
