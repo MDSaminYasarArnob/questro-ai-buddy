@@ -16,16 +16,49 @@ const authSchema = z.object({
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isForgotPassword) {
+      try {
+        z.string().email().parse(email);
+      } catch {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a valid email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLoading(true);
+      const { error } = await resetPassword(email);
+      setLoading(false);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link",
+        });
+        setIsForgotPassword(false);
+      }
+      return;
+    }
+
     try {
       authSchema.parse({ email, password });
     } catch (err) {
@@ -56,7 +89,7 @@ const Auth = () => {
     } else {
       toast({
         title: isLogin ? "Welcome back!" : "Account created!",
-        description: isLogin ? "Successfully logged in" : "Please check your email to verify your account",
+        description: isLogin ? "Successfully logged in" : "You're all set! No email confirmation needed",
       });
       if (isLogin) navigate('/');
     }
@@ -73,7 +106,11 @@ const Auth = () => {
             </h1>
           </div>
           <p className="text-muted-foreground">
-            {isLogin ? 'Welcome back! Sign in to continue' : 'Create your account to get started'}
+            {isForgotPassword 
+              ? 'Enter your email to reset your password'
+              : isLogin 
+                ? 'Welcome back! Sign in to continue' 
+                : 'Create your account to get started'}
           </p>
         </div>
 
@@ -91,18 +128,20 @@ const Auth = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-surface border-border"
-              required
-            />
-          </div>
+          {!isForgotPassword && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-surface border-border"
+                required
+              />
+            </div>
+          )}
 
           <Button 
             type="submit" 
@@ -114,18 +153,32 @@ const Auth = () => {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing...
               </>
+            ) : isForgotPassword ? (
+              'Send Reset Link'
             ) : (
               isLogin ? 'Sign In' : 'Sign Up'
             )}
           </Button>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
+            {!isForgotPassword && (
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-primary hover:text-primary-glow transition-colors block w-full"
+              >
+                {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-primary hover:text-primary-glow transition-colors"
+              onClick={() => {
+                setIsForgotPassword(!isForgotPassword);
+                setIsLogin(true);
+              }}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {isForgotPassword ? 'Back to sign in' : 'Forgot password?'}
             </button>
           </div>
         </form>
