@@ -11,28 +11,31 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, apiKey } = await req.json();
+    const { imageBase64 } = await req.json();
 
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: 'API key is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    console.log('Processing image with Lovable AI Gateway...');
 
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey,
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: "You are an expert tutor. Analyze this question paper image and provide detailed step-by-step solutions for all questions. Explain clearly so students can understand the concepts." },
+          model: 'google/gemini-2.5-flash',
+          messages: [{
+            role: 'user',
+            content: [
+              { 
+                type: 'text', 
+                text: 'You are an expert tutor. Analyze this question paper image and provide detailed step-by-step solutions for all questions. Explain clearly so students can understand the concepts.' 
+              },
               {
-                inline_data: {
-                  mime_type: "image/jpeg",
-                  data: imageBase64
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${imageBase64}`
                 }
               }
             ]
@@ -43,7 +46,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Gemini API error:', error);
+      console.error('AI Gateway error:', error);
       return new Response(
         JSON.stringify({ error: 'Failed to analyze image' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -51,7 +54,9 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const solution = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No solution generated';
+    const solution = data.choices?.[0]?.message?.content || 'No solution generated';
+
+    console.log('Solution generated successfully');
 
     return new Response(
       JSON.stringify({ solution }),

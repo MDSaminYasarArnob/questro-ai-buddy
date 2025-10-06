@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,37 +8,12 @@ import { useAuth } from '@/hooks/useAuth';
 const ImageSolver = () => {
   const [loading, setLoading] = useState(false);
   const [solution, setSolution] = useState('');
-  const [apiKey, setApiKey] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadApiKey();
-  }, [user]);
-
-  const loadApiKey = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('api_keys')
-      .select('api_key')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    setApiKey(data?.api_key || null);
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please add your Gemini API key in Settings first",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setLoading(true);
     setSolution('');
@@ -50,7 +24,7 @@ const ImageSolver = () => {
         const base64 = reader.result?.toString().split(',')[1];
         
         const { data, error } = await supabase.functions.invoke('solve-image', {
-          body: { imageBase64: base64, apiKey }
+          body: { imageBase64: base64 }
         });
 
         if (error) throw error;
@@ -95,7 +69,7 @@ const ImageSolver = () => {
           <ImageIcon className="w-16 h-16 text-primary mb-4" />
           <h3 className="text-xl font-semibold mb-2">Upload Question Image</h3>
           <p className="text-muted-foreground text-center mb-6 max-w-md">
-            Take a photo or upload an image of your questions. AI will solve them step-by-step in your preferred language.
+            Take a photo or upload an image of your questions. AI will solve them step-by-step.
           </p>
           
           <label htmlFor="image-upload" className="cursor-pointer">
