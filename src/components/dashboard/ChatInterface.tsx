@@ -6,6 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Send, Loader2, Copy, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
@@ -160,7 +164,18 @@ const ChatInterface = () => {
                       : 'bg-surface text-foreground'
                   }`}
                 >
-                  {msg.content}
+                  {msg.role === 'user' ? (
+                    msg.content
+                  ) : (
+                    <div className="prose prose-invert max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
                 {msg.role === 'assistant' && (
                   <Button

@@ -5,6 +5,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 const PdfMcqConverter = () => {
   const [loading, setLoading] = useState(false);
@@ -127,8 +131,13 @@ const PdfMcqConverter = () => {
       {mcqs && (
         <Card className="p-6 bg-background-card border-border shadow-soft">
           <h3 className="text-xl font-semibold mb-4">Generated MCQs:</h3>
-          <div className="prose prose-invert max-w-none whitespace-pre-wrap">
-            {mcqs}
+          <div className="prose prose-invert max-w-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {mcqs}
+            </ReactMarkdown>
           </div>
         </Card>
       )}
