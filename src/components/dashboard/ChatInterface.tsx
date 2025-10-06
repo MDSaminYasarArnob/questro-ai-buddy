@@ -88,8 +88,8 @@ const ChatInterface = () => {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
+              // Update immediately for each token/character
               assistantResponse += content;
-              // Update the last message with new content
               setMessages(prev => {
                 const newMessages = [...prev];
                 newMessages[newMessages.length - 1] = {
