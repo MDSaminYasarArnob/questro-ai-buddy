@@ -4,6 +4,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 const ImageSolver = () => {
   const [loading, setLoading] = useState(false);
@@ -149,8 +153,13 @@ const ImageSolver = () => {
       {solution && (
         <Card className="p-6 bg-card border-border shadow-soft">
           <h3 className="text-xl font-semibold mb-4 text-foreground">Solution:</h3>
-          <div className="text-foreground max-w-none whitespace-pre-wrap leading-relaxed">
-            {solution}
+          <div className="text-foreground max-w-none prose prose-invert max-w-full">
+            <ReactMarkdown
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {solution}
+            </ReactMarkdown>
           </div>
         </Card>
       )}
