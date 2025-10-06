@@ -30,7 +30,7 @@ serve(async (req) => {
             content: [
               { 
                 type: 'text', 
-                text: 'You are an expert tutor. Analyze this question paper image and provide detailed step-by-step solutions for all questions. Explain clearly so students can understand the concepts.' 
+                text: 'You are an expert mathematics and academic tutor. Carefully analyze the question(s) in this image and provide complete, detailed step-by-step solutions. For each question:\n\n1. First, clearly state what the question is asking\n2. Show all mathematical work and reasoning steps\n3. Explain the logic behind each step\n4. Provide the final answer clearly\n5. If there are multiple questions, solve each one separately and number them\n\nMake your explanations clear and educational so students can learn from the solution process.' 
               },
               {
                 type: 'image_url',
