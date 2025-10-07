@@ -9,16 +9,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import * as pdfjsLib from 'pdfjs-dist';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const PdfMcqConverter = () => {
   const [loading, setLoading] = useState(false);
   const [mcqs, setMcqs] = useState('');
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfPreview, setPdfPreview] = useState<string | null>(null);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -65,63 +61,16 @@ const PdfMcqConverter = () => {
     setPdfFile(file);
     setMcqs('');
     
-    try {
-      // Read file as base64
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const base64String = reader.result?.toString();
-          if (!base64String) return;
-          
-          const base64 = base64String.split(',')[1];
-          setPdfBase64(base64 || null);
-          
-          // Generate preview of first page
-          if (base64) {
-            const binaryString = atob(base64);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            const loadingTask = pdfjsLib.getDocument({ data: bytes });
-            const pdf = await loadingTask.promise;
-            const page = await pdf.getPage(1);
-            
-            const viewport = page.getViewport({ scale: 1.5 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            
-            if (context) {
-              const renderContext = {
-                canvasContext: context,
-                viewport: viewport,
-              };
-              await page.render(renderContext as any).promise;
-              
-              setPdfPreview(canvas.toDataURL());
-            }
-          }
-        } catch (error: any) {
-          console.error('PDF preview error:', error);
-          toast({
-            title: "Preview Error",
-            description: "Could not generate preview, but you can still convert",
-          });
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (error: any) {
-      console.error('File read error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to read PDF file",
-        variant: "destructive",
-      });
-    }
+    // Read file as base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result?.toString();
+      if (base64String) {
+        const base64 = base64String.split(',')[1];
+        setPdfBase64(base64);
+      }
+    };
+    reader.readAsDataURL(file);
     
     e.target.value = '';
   };
@@ -164,7 +113,6 @@ const PdfMcqConverter = () => {
 
   const handleClearPdf = () => {
     setPdfFile(null);
-    setPdfPreview(null);
     setPdfBase64(null);
     setMcqs('');
   };
@@ -203,10 +151,15 @@ const PdfMcqConverter = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                <span className="font-medium">{pdfFile.name}</span>
+            <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/50">
+              <div className="flex items-center gap-3">
+                <FileText className="w-8 h-8 text-primary" />
+                <div>
+                  <p className="font-medium">{pdfFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
               </div>
               <Button
                 variant="ghost"
@@ -217,16 +170,6 @@ const PdfMcqConverter = () => {
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            
-            {pdfPreview && (
-              <div className="border border-border rounded-lg overflow-hidden">
-                <img 
-                  src={pdfPreview} 
-                  alt="PDF Preview" 
-                  className="w-full h-auto"
-                />
-              </div>
-            )}
             
             <Button
               onClick={handleConvert}
