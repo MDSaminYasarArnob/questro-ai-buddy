@@ -82,7 +82,7 @@ const PdfMcqConverter = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('convert-pdf-mcq', {
-        body: { pdfBase64, apiKey }
+        body: { pdfBase64 }
       });
 
       if (error) throw error;

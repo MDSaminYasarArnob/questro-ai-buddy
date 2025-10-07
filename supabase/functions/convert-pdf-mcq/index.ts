@@ -11,39 +11,63 @@ serve(async (req) => {
   }
 
   try {
-    const { pdfBase64, apiKey } = await req.json();
+    const { pdfBase64 } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!apiKey) {
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not configured');
       return new Response(
-        JSON.stringify({ error: 'API key is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'AI service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: "You are an expert educator. Analyze this textbook PDF and generate 20-30 important multiple choice questions (MCQs) covering the key concepts. Format each question with 4 options (A, B, C, D) and indicate the correct answer. Make the questions challenging but fair." },
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'user',
+            content: [
               {
-                inline_data: {
-                  mime_type: "application/pdf",
-                  data: pdfBase64
+                type: 'text',
+                text: 'You are an expert educator. Analyze this textbook PDF and generate 20-30 important multiple choice questions (MCQs) covering the key concepts. Format each question with 4 options (A, B, C, D) and indicate the correct answer. Make the questions challenging but fair.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:application/pdf;base64,${pdfBase64}`
                 }
               }
             ]
-          }]
-        })
-      }
-    );
+          }
+        ]
+      })
+    });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Gemini API error:', error);
+      console.error('Lovable AI error:', response.status, error);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: 'Failed to convert PDF to MCQs' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -51,7 +75,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const mcqs = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No MCQs generated';
+    const mcqs = data.choices?.[0]?.message?.content || 'No MCQs generated';
 
     return new Response(
       JSON.stringify({ mcqs }),
