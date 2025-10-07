@@ -52,6 +52,16 @@ const PdfMcqConverter = () => {
       return;
     }
 
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: "Invalid File",
+        description: "Please upload a PDF file",
+        variant: "destructive",
+      });
+      e.target.value = '';
+      return;
+    }
+
     setPdfFile(file);
     setMcqs('');
     
@@ -59,38 +69,56 @@ const PdfMcqConverter = () => {
       // Read file as base64
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64 = reader.result?.toString().split(',')[1];
-        setPdfBase64(base64 || null);
-        
-        // Generate preview of first page
-        if (base64) {
-          const loadingTask = pdfjsLib.getDocument({ data: atob(base64) });
-          const pdf = await loadingTask.promise;
-          const page = await pdf.getPage(1);
+        try {
+          const base64String = reader.result?.toString();
+          if (!base64String) return;
           
-          const viewport = page.getViewport({ scale: 1.5 });
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
+          const base64 = base64String.split(',')[1];
+          setPdfBase64(base64 || null);
           
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-          
-          if (context) {
-            const renderContext = {
-              canvasContext: context,
-              viewport: viewport,
-            };
-            await page.render(renderContext as any).promise;
+          // Generate preview of first page
+          if (base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
             
-            setPdfPreview(canvas.toDataURL());
+            const loadingTask = pdfjsLib.getDocument({ data: bytes });
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+            
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            
+            if (context) {
+              const renderContext = {
+                canvasContext: context,
+                viewport: viewport,
+              };
+              await page.render(renderContext as any).promise;
+              
+              setPdfPreview(canvas.toDataURL());
+            }
           }
+        } catch (error: any) {
+          console.error('PDF preview error:', error);
+          toast({
+            title: "Preview Error",
+            description: "Could not generate preview, but you can still convert",
+          });
         }
       };
       reader.readAsDataURL(file);
     } catch (error: any) {
+      console.error('File read error:', error);
       toast({
         title: "Error",
-        description: "Failed to load PDF preview",
+        description: "Failed to read PDF file",
         variant: "destructive",
       });
     }
