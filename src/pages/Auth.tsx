@@ -91,7 +91,7 @@ const Auth = () => {
         title: isLogin ? "Welcome back!" : "Account created!",
         description: isLogin ? "Successfully logged in" : "You're all set! No email confirmation needed",
       });
-      if (isLogin) navigate('/');
+      navigate('/dashboard');
     }
   };
 
