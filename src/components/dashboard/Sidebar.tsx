@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface SidebarProps {
   activeView: string;
-  onViewChange: (view: 'chat' | 'pdf' | 'image' | 'history' | 'settings') => void;
+  onViewChange: (view: 'chat' | 'pdf' | 'image' | 'history') => void;
 }
 
 const Sidebar = ({ activeView, onViewChange }: SidebarProps) => {
@@ -32,7 +32,6 @@ const Sidebar = ({ activeView, onViewChange }: SidebarProps) => {
     { id: 'pdf', icon: FileText, label: 'PDF to MCQ' },
     { id: 'image', icon: Image, label: 'Image Solver' },
     { id: 'history', icon: History, label: 'History' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
   return (

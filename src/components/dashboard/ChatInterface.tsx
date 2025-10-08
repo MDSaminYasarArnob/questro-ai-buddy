@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Loader2, Copy, Check } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Paperclip, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import ReactMarkdown from 'react-markdown';
@@ -13,11 +13,58 @@ import 'katex/dist/katex.min.css';
 
 const ChatInterface = () => {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; fileUrl?: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image (JPG, PNG, WEBP) or PDF file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 20MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadedFile(file);
+    
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+
+    e.target.value = '';
+  };
+
+  const removeFile = () => {
+    setUploadedFile(null);
+    setFilePreview(null);
+  };
 
   const copyToClipboard = async (text: string, index: number) => {
     try {
@@ -33,11 +80,36 @@ const ChatInterface = () => {
   };
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() && !uploadedFile) return;
 
     const userMessage = message;
+    let fileBase64 = null;
+    let fileType = null;
+    const currentFile = uploadedFile;
+    
+    if (uploadedFile) {
+      const reader = new FileReader();
+      fileBase64 = await new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const base64String = reader.result?.toString();
+          if (base64String) {
+            resolve(base64String.split(',')[1]);
+          }
+        };
+        reader.readAsDataURL(uploadedFile);
+      });
+      fileType = uploadedFile.type;
+    }
+
     setMessage('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setUploadedFile(null);
+    setFilePreview(null);
+    
+    setMessages(prev => [...prev, { 
+      role: 'user', 
+      content: userMessage,
+      fileUrl: filePreview || undefined
+    }]);
     setLoading(true);
 
     // Add an empty assistant message that we'll stream into
@@ -53,7 +125,9 @@ const ChatInterface = () => {
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ 
-          messages: [...messages, { role: 'user', content: userMessage }]
+          messages: [...messages, { role: 'user', content: userMessage }],
+          fileBase64,
+          fileType
         }),
       });
 
@@ -111,9 +185,13 @@ const ChatInterface = () => {
       }
 
       // Save to history
+      const historyTitle = currentFile 
+        ? `File: ${currentFile.name.substring(0, 30)}`
+        : userMessage.substring(0, 50);
+        
       await supabase.from('chat_history').insert({
         user_id: user!.id,
-        title: userMessage.substring(0, 50),
+        title: historyTitle,
         type: 'chat',
         messages: [...messages, 
           { role: 'user', content: userMessage }, 
@@ -165,7 +243,12 @@ const ChatInterface = () => {
                   }`}
                 >
                   {msg.role === 'user' ? (
-                    msg.content
+                    <div className="space-y-2">
+                      {msg.fileUrl && (
+                        <img src={msg.fileUrl} alt="Uploaded" className="max-w-xs rounded" />
+                      )}
+                      <p>{msg.content}</p>
+                    </div>
                   ) : (
                     <div className="prose prose-invert max-w-none">
                       <ReactMarkdown
@@ -203,24 +286,69 @@ const ChatInterface = () => {
         </div>
 
         <div className="p-6 border-t border-border">
+          {uploadedFile && (
+            <div className="mb-3 p-3 bg-surface rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {filePreview ? (
+                  <img src={filePreview} alt="Preview" className="w-12 h-12 rounded object-cover" />
+                ) : (
+                  <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                    <Paperclip className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="text-sm">
+                  <p className="font-medium">{uploadedFile.name}</p>
+                  <p className="text-muted-foreground">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={removeFile}
+                disabled={loading}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+          
           <div className="flex gap-3">
-            <Textarea
-              placeholder="Type your message here..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="bg-surface border-border resize-none"
-              rows={3}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
+            <div className="flex-1 space-y-2">
+              <Textarea
+                placeholder="Type your message here..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="bg-surface border-border resize-none"
+                rows={3}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading || !!uploadedFile}
+                className="border-border hover:bg-surface"
+              >
+                <Paperclip className="w-4 h-4 mr-2" />
+                Attach File (Image/PDF)
+              </Button>
+            </div>
             <Button
               onClick={handleSend}
-              disabled={loading || !message.trim()}
-              className="bg-gradient-primary hover:opacity-90"
+              disabled={loading || (!message.trim() && !uploadedFile)}
+              className="bg-gradient-primary hover:opacity-90 self-end"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

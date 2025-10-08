@@ -3,7 +3,6 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import Sidebar from '@/components/dashboard/Sidebar';
-import ApiKeyManager from '@/components/dashboard/ApiKeyManager';
 import ChatInterface from '@/components/dashboard/ChatInterface';
 import PdfMcqConverter from '@/components/dashboard/PdfMcqConverter';
 import ImageSolver from '@/components/dashboard/ImageSolver';
@@ -11,7 +10,7 @@ import History from '@/components/dashboard/History';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
-  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'history' | 'settings'>('chat');
+  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'history'>('chat');
 
   if (loading) {
     return (
@@ -34,7 +33,6 @@ const Dashboard = () => {
         {activeView === 'pdf' && <PdfMcqConverter />}
         {activeView === 'image' && <ImageSolver />}
         {activeView === 'history' && <History />}
-        {activeView === 'settings' && <ApiKeyManager />}
       </main>
     </div>
   );

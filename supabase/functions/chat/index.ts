@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, fileBase64, fileType } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
@@ -22,6 +22,40 @@ serve(async (req) => {
       );
     }
 
+    // Build content based on whether there's a file
+    let apiMessages: any[];
+    
+    if (fileBase64 && fileType) {
+      const lastMessage = messages[messages.length - 1];
+      const messageText = lastMessage?.content || 'Analyze this file';
+      
+      const content = [
+        {
+          type: 'text',
+          text: messageText
+        },
+        {
+          type: 'image_url',
+          image_url: {
+            url: fileType === 'application/pdf' 
+              ? `data:application/pdf;base64,${fileBase64}`
+              : `data:${fileType};base64,${fileBase64}`
+          }
+        }
+      ];
+
+      apiMessages = [
+        { role: 'system', content: 'You are a helpful AI study assistant. You can analyze images and PDFs. Provide clear, concise, and educational responses to help students learn.' },
+        ...messages.slice(0, -1),
+        { role: 'user', content: content }
+      ];
+    } else {
+      apiMessages = [
+        { role: 'system', content: 'You are a helpful AI study assistant. Provide clear, concise, and educational responses to help students learn. Remember the conversation context and refer to previous messages when relevant.' },
+        ...messages
+      ];
+    }
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -30,10 +64,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'You are a helpful AI study assistant. Provide clear, concise, and educational responses to help students learn. Remember the conversation context and refer to previous messages when relevant.' },
-          ...messages
-        ],
+        messages: apiMessages,
         stream: true,
       }),
     });
