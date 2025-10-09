@@ -13,40 +13,14 @@ import 'katex/dist/katex.min.css';
 const PdfMcqConverter = () => {
   const [loading, setLoading] = useState(false);
   const [mcqs, setMcqs] = useState('');
-  const [apiKey, setApiKey] = useState<string | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadApiKey();
-  }, [user]);
-
-  const loadApiKey = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('api_keys')
-      .select('api_key')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    setApiKey(data?.api_key || null);
-  };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please add your Gemini API key in Settings first",
-        variant: "destructive",
-      });
-      e.target.value = '';
-      return;
-    }
 
     if (file.type !== 'application/pdf') {
       toast({
