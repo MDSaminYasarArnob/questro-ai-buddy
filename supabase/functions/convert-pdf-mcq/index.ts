@@ -22,6 +22,8 @@ serve(async (req) => {
       );
     }
 
+    console.log('Processing PDF to generate MCQs...');
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -36,7 +38,7 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: 'You are an expert educator. Analyze this textbook PDF and generate 20-30 important multiple choice questions (MCQs) covering the key concepts. Format each question with 4 options (A, B, C, D) and indicate the correct answer. Make the questions challenging but fair.'
+                text: 'Analyze this PDF document and generate exactly 10 multiple choice questions (MCQs) based on the key concepts. Return the response in this exact JSON format only, no other text:\n\n{"questions":[{"id":1,"question":"Question text here?","options":{"A":"Option A","B":"Option B","C":"Option C","D":"Option D"},"correctAnswer":"A","explanation":"Brief explanation of why this is correct"}]}\n\nRequirements:\n1. Generate exactly 10 questions\n2. Each question must have exactly 4 options (A, B, C, D)\n3. correctAnswer must be one of: A, B, C, D\n4. Include a brief explanation for each correct answer\n5. Make questions challenging but fair\n6. Cover different topics from the document\n7. Return ONLY valid JSON, no markdown or other text'
               },
               {
                 type: 'image_url',
@@ -75,10 +77,58 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const mcqs = data.choices?.[0]?.message?.content || 'No MCQs generated';
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    console.log('AI Response:', content);
+
+    // Parse the JSON response
+    let questions;
+    try {
+      // Try to extract JSON from the response (in case there's extra text)
+      const jsonMatch = content.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        questions = parsed.questions;
+      } else {
+        // Try parsing directly
+        const parsed = JSON.parse(content);
+        questions = parsed.questions;
+      }
+      
+      // Validate the structure
+      if (!Array.isArray(questions) || questions.length === 0) {
+        throw new Error('No questions found');
+      }
+      
+      // Ensure each question has required fields
+      questions = questions.map((q: any, idx: number) => ({
+        id: idx + 1,
+        question: q.question || `Question ${idx + 1}`,
+        options: {
+          A: q.options?.A || 'Option A',
+          B: q.options?.B || 'Option B',
+          C: q.options?.C || 'Option C',
+          D: q.options?.D || 'Option D',
+        },
+        correctAnswer: ['A', 'B', 'C', 'D'].includes(q.correctAnswer) ? q.correctAnswer : 'A',
+        explanation: q.explanation || 'No explanation provided.'
+      }));
+      
+      // Limit to 10 questions
+      questions = questions.slice(0, 10);
+      
+    } catch (parseError) {
+      console.error('Failed to parse MCQ response:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse MCQ response. Please try again.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Successfully generated', questions.length, 'questions');
 
     return new Response(
-      JSON.stringify({ mcqs }),
+      JSON.stringify({ questions }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
