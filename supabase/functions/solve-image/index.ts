@@ -46,7 +46,22 @@ serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('AI Gateway error:', error);
+      console.error('AI Gateway error:', response.status, error);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: 'Failed to analyze image' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
