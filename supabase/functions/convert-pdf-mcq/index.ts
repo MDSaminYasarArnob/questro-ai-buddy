@@ -11,7 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const { pdfBase64 } = await req.json();
+    const { pdfBase64, mcqCount = 10 } = await req.json();
+    const questionCount = Math.min(50, Math.max(1, parseInt(mcqCount) || 10));
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
@@ -22,7 +23,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing PDF to generate MCQs...');
+    console.log(`Processing PDF to generate ${questionCount} MCQs...`);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -38,7 +39,7 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: 'Analyze this PDF document and generate exactly 10 multiple choice questions (MCQs) based on the key concepts. Return the response in this exact JSON format only, no other text:\n\n{"questions":[{"id":1,"question":"Question text here?","options":{"A":"Option A","B":"Option B","C":"Option C","D":"Option D"},"correctAnswer":"A","explanation":"Brief explanation of why this is correct"}]}\n\nRequirements:\n1. Generate exactly 10 questions\n2. Each question must have exactly 4 options (A, B, C, D)\n3. correctAnswer must be one of: A, B, C, D\n4. Include a brief explanation for each correct answer\n5. Make questions challenging but fair\n6. Cover different topics from the document\n7. Return ONLY valid JSON, no markdown or other text'
+                text: `Analyze this PDF document and generate exactly ${questionCount} multiple choice questions (MCQs) based on the key concepts. Return the response in this exact JSON format only, no other text:\n\n{"questions":[{"id":1,"question":"Question text here?","options":{"A":"Option A","B":"Option B","C":"Option C","D":"Option D"},"correctAnswer":"A","explanation":"Brief explanation of why this is correct"}]}\n\nRequirements:\n1. Generate exactly ${questionCount} questions\n2. Each question must have exactly 4 options (A, B, C, D)\n3. correctAnswer must be one of: A, B, C, D\n4. Include a brief explanation for each correct answer\n5. Make questions challenging but fair\n6. Cover different topics from the document\n7. Return ONLY valid JSON, no markdown or other text`
               },
               {
                 type: 'image_url',
@@ -114,8 +115,8 @@ serve(async (req) => {
         explanation: q.explanation || 'No explanation provided.'
       }));
       
-      // Limit to 10 questions
-      questions = questions.slice(0, 10);
+      // Limit to requested count
+      questions = questions.slice(0, questionCount);
       
     } catch (parseError) {
       console.error('Failed to parse MCQ response:', parseError);

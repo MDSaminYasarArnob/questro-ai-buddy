@@ -12,6 +12,7 @@ const PdfMcqConverter = () => {
   const [questions, setQuestions] = useState<MCQQuestion[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
+  const [mcqCount, setMcqCount] = useState<number>(10);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -53,7 +54,7 @@ const PdfMcqConverter = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('convert-pdf-mcq', {
-        body: { pdfBase64 }
+        body: { pdfBase64, mcqCount }
       });
 
       if (error) {
@@ -114,7 +115,7 @@ const PdfMcqConverter = () => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold mb-2">PDF to MCQ Quiz</h2>
         <p className="text-muted-foreground">
-          Upload your textbook PDF and take an interactive 10-question quiz
+          Upload your textbook PDF and take an interactive MCQ quiz
         </p>
       </div>
 
@@ -164,6 +165,26 @@ const PdfMcqConverter = () => {
                 </Button>
               </div>
               
+              <div className="flex items-center gap-4">
+                <label htmlFor="mcq-count" className="text-sm font-medium whitespace-nowrap">
+                  Number of MCQs:
+                </label>
+                <input
+                  id="mcq-count"
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={mcqCount}
+                  onChange={(e) => {
+                    const val = Math.min(50, Math.max(1, parseInt(e.target.value) || 1));
+                    setMcqCount(val);
+                  }}
+                  className="w-20 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  disabled={loading}
+                />
+                <span className="text-xs text-muted-foreground">(1-50)</span>
+              </div>
+              
               <Button
                 onClick={handleConvert}
                 disabled={loading}
@@ -175,7 +196,7 @@ const PdfMcqConverter = () => {
                     Generating Quiz...
                   </>
                 ) : (
-                  'Generate 10 MCQs'
+                  `Generate ${mcqCount} MCQs`
                 )}
               </Button>
             </div>
@@ -186,7 +207,7 @@ const PdfMcqConverter = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold">Quiz: {pdfFile?.name}</h3>
-              <p className="text-sm text-muted-foreground">Answer all 10 questions and submit to see your results</p>
+              <p className="text-sm text-muted-foreground">Answer all {questions.length} questions and submit to see your results</p>
             </div>
             <Button variant="outline" size="sm" onClick={handleClearPdf}>
               <X className="w-4 h-4 mr-2" />
