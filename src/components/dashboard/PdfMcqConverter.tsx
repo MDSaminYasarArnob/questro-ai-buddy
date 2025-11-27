@@ -1,18 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Loader2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
+import McqQuiz, { MCQQuestion } from './McqQuiz';
 
 const PdfMcqConverter = () => {
   const [loading, setLoading] = useState(false);
-  const [mcqs, setMcqs] = useState('');
+  const [questions, setQuestions] = useState<MCQQuestion[]>([]);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const { user } = useAuth();
@@ -33,7 +30,7 @@ const PdfMcqConverter = () => {
     }
 
     setPdfFile(file);
-    setMcqs('');
+    setQuestions([]);
     
     // Read file as base64
     const reader = new FileReader();
@@ -73,18 +70,23 @@ const PdfMcqConverter = () => {
         throw new Error(data.error);
       }
 
-      setMcqs(data.mcqs);
+      // Parse the questions from the response
+      if (data.questions && Array.isArray(data.questions)) {
+        setQuestions(data.questions);
+      } else {
+        throw new Error('Invalid response format');
+      }
 
       await supabase.from('chat_history').insert({
         user_id: user!.id,
-        title: `PDF MCQs - ${pdfFile.name}`,
+        title: `MCQ Quiz - ${pdfFile.name}`,
         type: 'pdf_mcq',
-        messages: [{ mcqs: data.mcqs }]
+        messages: [{ questions: data.questions }]
       });
 
       toast({
         title: "Success",
-        description: "MCQs generated successfully!",
+        description: "MCQ Quiz generated! Answer the questions below.",
       });
     } catch (error: any) {
       toast({
@@ -100,93 +102,100 @@ const PdfMcqConverter = () => {
   const handleClearPdf = () => {
     setPdfFile(null);
     setPdfBase64(null);
-    setMcqs('');
+    setQuestions([]);
+  };
+
+  const handleRetry = () => {
+    setQuestions([]);
   };
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-2">PDF to MCQ Converter</h2>
+        <h2 className="text-3xl font-bold mb-2">PDF to MCQ Quiz</h2>
         <p className="text-muted-foreground">
-          Upload your textbook PDF and get important MCQs generated automatically
+          Upload your textbook PDF and take an interactive 10-question quiz
         </p>
       </div>
 
-      <Card className="p-8 bg-background-card border-border shadow-soft mb-6">
-        {!pdfFile ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <FileText className="w-16 h-16 text-primary mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Upload Your PDF</h3>
-            <p className="text-muted-foreground text-center mb-6 max-w-md">
-              Support for textbooks up to 50 pages. Get MCQs generated in any language you prefer.
-            </p>
-            
-            <label htmlFor="pdf-upload" className="cursor-pointer">
-              <div className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-primary hover:opacity-90 transition-opacity font-medium">
-                <Upload className="w-4 h-4" />
-                Choose PDF File
-              </div>
-              <input
-                id="pdf-upload"
-                type="file"
-                accept=".pdf"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </label>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/50">
-              <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-primary" />
-                <div>
-                  <p className="font-medium">{pdfFile.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
+      {questions.length === 0 ? (
+        <Card className="p-8 bg-card border-border shadow-soft mb-6">
+          {!pdfFile ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <FileText className="w-16 h-16 text-primary mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Upload Your PDF</h3>
+              <p className="text-muted-foreground text-center mb-6 max-w-md">
+                Upload your textbook or study material. AI will generate 10 MCQs for you to practice.
+              </p>
+              
+              <label htmlFor="pdf-upload" className="cursor-pointer">
+                <div className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-primary hover:opacity-90 transition-opacity font-medium text-primary-foreground">
+                  <Upload className="w-4 h-4" />
+                  Choose PDF File
                 </div>
+                <input
+                  id="pdf-upload"
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="font-medium">{pdfFile.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearPdf}
+                  disabled={loading}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
+              
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearPdf}
+                onClick={handleConvert}
                 disabled={loading}
+                className="w-full bg-gradient-primary hover:opacity-90"
               >
-                <X className="w-4 h-4" />
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Generating Quiz...
+                  </>
+                ) : (
+                  'Generate 10 MCQs'
+                )}
               </Button>
             </div>
-            
-            <Button
-              onClick={handleConvert}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Converting...
-                </>
-              ) : (
-                'Convert to MCQs'
-              )}
+          )}
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold">Quiz: {pdfFile?.name}</h3>
+              <p className="text-sm text-muted-foreground">Answer all 10 questions and submit to see your results</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleClearPdf}>
+              <X className="w-4 h-4 mr-2" />
+              New PDF
             </Button>
           </div>
-        )}
-      </Card>
-
-      {mcqs && (
-        <Card className="p-6 bg-background-card border-border shadow-soft">
-          <h3 className="text-xl font-semibold mb-4">Generated MCQs:</h3>
-          <div className="prose prose-invert max-w-none">
-            <ReactMarkdown
-              remarkPlugins={[remarkMath]}
-              rehypePlugins={[rehypeKatex]}
-            >
-              {mcqs}
-            </ReactMarkdown>
-          </div>
-        </Card>
+          
+          <McqQuiz questions={questions} onRetry={handleRetry} />
+        </div>
       )}
     </div>
   );
