@@ -131,8 +131,19 @@ const ChatInterface = () => {
         }),
       });
 
-      if (!response.ok || !response.body) {
-        throw new Error('Failed to start stream');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to get response' }));
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+        }
+        if (response.status === 402) {
+          throw new Error('AI service quota exceeded. Please add credits to continue.');
+        }
+        throw new Error(errorData.error || 'Failed to get response');
+      }
+      
+      if (!response.body) {
+        throw new Error('No response body');
       }
 
       const reader = response.body.getReader();

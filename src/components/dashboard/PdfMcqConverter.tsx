@@ -59,7 +59,19 @@ const PdfMcqConverter = () => {
         body: { pdfBase64 }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+          throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+        }
+        if (error.message?.includes('402')) {
+          throw new Error('AI service quota exceeded. Please add credits to continue.');
+        }
+        throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       setMcqs(data.mcqs);
 
