@@ -6,8 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { 
   MessageSquarePlus, 
-  ChevronLeft, 
-  ChevronRight, 
+  PanelLeftClose, 
+  PanelLeft, 
   Trash2, 
   MessageCircle,
   Loader2
@@ -102,99 +102,85 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, refreshTrigger }:
   };
 
   return (
-    <div 
-      className={cn(
-        "h-full bg-surface border-r border-border flex flex-col transition-all duration-300",
-        isCollapsed ? "w-14" : "w-64"
-      )}
-    >
-      {/* Header */}
-      <div className="p-3 border-b border-border flex items-center justify-between">
-        {!isCollapsed && (
+    <div className="relative flex">
+      {/* Sidebar */}
+      <div 
+        className={cn(
+          "h-full bg-surface border-r border-border flex flex-col transition-all duration-300 ease-in-out",
+          isCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-64 opacity-100"
+        )}
+      >
+        {/* Header */}
+        <div className="p-3 border-b border-border flex items-center gap-2 min-w-[256px]">
           <Button
             onClick={onNewChat}
-            className="flex-1 mr-2 bg-gradient-primary hover:opacity-90"
+            className="flex-1 bg-gradient-primary hover:opacity-90"
             size="sm"
           >
             <MessageSquarePlus className="w-4 h-4 mr-2" />
             New Chat
           </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="shrink-0"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
-
-      {/* New chat button when collapsed */}
-      {isCollapsed && (
-        <div className="p-2 border-b border-border">
-          <Button
-            onClick={onNewChat}
-            variant="ghost"
-            size="icon"
-            className="w-full"
-          >
-            <MessageSquarePlus className="w-4 h-4" />
-          </Button>
         </div>
-      )}
 
-      {/* Chat list */}
-      <ScrollArea className="flex-1">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : chats.length === 0 ? (
-          !isCollapsed && (
+        {/* Chat list */}
+        <ScrollArea className="flex-1 min-w-[256px]">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : chats.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground text-sm">
               No conversations yet
             </div>
-          )
-        ) : (
-          <div className="p-2 space-y-1">
-            {chats.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => onSelectChat(chat)}
-                className={cn(
-                  "group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors",
-                  currentChatId === chat.id
-                    ? "bg-primary/10 text-primary"
-                    : "hover:bg-muted/50 text-foreground"
-                )}
-              >
-                <MessageCircle className="w-4 h-4 shrink-0" />
-                {!isCollapsed && (
-                  <>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{chat.title}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(chat.created_at)}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => handleDelete(e, chat.id)}
-                    >
-                      <Trash2 className="w-3 h-3 text-destructive" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
+          ) : (
+            <div className="p-2 space-y-1">
+              {chats.map((chat) => (
+                <div
+                  key={chat.id}
+                  onClick={() => onSelectChat(chat)}
+                  className={cn(
+                    "group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors",
+                    currentChatId === chat.id
+                      ? "bg-primary/10 text-primary"
+                      : "hover:bg-muted/50 text-foreground"
+                  )}
+                >
+                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{chat.title}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(chat.created_at)}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => handleDelete(e, chat.id)}
+                  >
+                    <Trash2 className="w-3 h-3 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
+
+      {/* Toggle Button - Always visible */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className={cn(
+          "absolute top-3 z-10 h-8 w-8 bg-surface border border-border shadow-sm hover:bg-muted transition-all duration-300",
+          isCollapsed ? "left-2" : "left-[248px]"
         )}
-      </ScrollArea>
+      >
+        {isCollapsed ? (
+          <PanelLeft className="w-4 h-4" />
+        ) : (
+          <PanelLeftClose className="w-4 h-4" />
+        )}
+      </Button>
     </div>
   );
 };
