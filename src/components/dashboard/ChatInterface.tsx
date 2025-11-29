@@ -288,16 +288,9 @@ const ChatInterface = () => {
 
   return (
     <div className="h-full flex">
-      {/* Chat Sidebar */}
-      <ChatSidebar 
-        currentChatId={currentChatId}
-        onSelectChat={handleSelectChat}
-        onNewChat={handleNewChat}
-        refreshTrigger={refreshTrigger}
-      />
-
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col p-6">
+
         <div className="mb-4">
           <h2 className="text-2xl font-bold">AI Chat Assistant</h2>
           <p className="text-sm text-muted-foreground">
@@ -447,6 +440,14 @@ const ChatInterface = () => {
           </div>
         </Card>
       </div>
+
+      {/* Chat Sidebar - Right Side */}
+      <ChatSidebar 
+        currentChatId={currentChatId}
+        onSelectChat={handleSelectChat}
+        onNewChat={handleNewChat}
+        refreshTrigger={refreshTrigger}
+      />
     </div>
   );
 };
