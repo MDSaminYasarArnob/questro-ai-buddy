@@ -6,8 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { 
   MessageSquarePlus, 
-  PanelLeftClose, 
-  PanelLeft, 
+  PanelRightClose, 
+  PanelRight, 
   Trash2, 
   MessageCircle,
   Loader2
@@ -103,10 +103,27 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, refreshTrigger }:
 
   return (
     <div className="relative flex">
-      {/* Sidebar */}
+      {/* Toggle Button - Always visible on the left side of this component */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className={cn(
+          "absolute top-3 z-10 h-8 w-8 bg-surface border border-border shadow-sm hover:bg-muted transition-all duration-300",
+          isCollapsed ? "right-2" : "right-[248px]"
+        )}
+      >
+        {isCollapsed ? (
+          <PanelRight className="w-4 h-4" />
+        ) : (
+          <PanelRightClose className="w-4 h-4" />
+        )}
+      </Button>
+
+      {/* Sidebar - on right side */}
       <div 
         className={cn(
-          "h-full bg-surface border-r border-border flex flex-col transition-all duration-300 ease-in-out",
+          "h-full bg-surface border-l border-border flex flex-col transition-all duration-300 ease-in-out",
           isCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-64 opacity-100"
         )}
       >
@@ -164,23 +181,6 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, refreshTrigger }:
           )}
         </ScrollArea>
       </div>
-
-      {/* Toggle Button - Always visible */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className={cn(
-          "absolute top-3 z-10 h-8 w-8 bg-surface border border-border shadow-sm hover:bg-muted transition-all duration-300",
-          isCollapsed ? "left-2" : "left-[248px]"
-        )}
-      >
-        {isCollapsed ? (
-          <PanelLeft className="w-4 h-4" />
-        ) : (
-          <PanelLeftClose className="w-4 h-4" />
-        )}
-      </Button>
     </div>
   );
 };
