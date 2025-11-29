@@ -24,13 +24,36 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'google/gemini-2.5-pro',
           messages: [{
             role: 'user',
             content: [
               { 
                 type: 'text', 
-                text: 'You are an expert mathematics and academic tutor. Carefully analyze the question(s) in this image and provide complete, detailed step-by-step solutions. For each question:\n\n1. First, clearly state what the question is asking\n2. Show all mathematical work and reasoning steps\n3. Explain the logic behind each step\n4. Provide the final answer clearly\n5. If there are multiple questions, solve each one separately and number them\n\nMake your explanations clear and educational so students can learn from the solution process.' 
+                text: `You are Questro AI - an expert problem solver capable of handling ANY academic question. Analyze the image and provide complete, detailed solutions.
+
+**For Mathematical Problems:**
+- State what the question asks
+- Show ALL working steps using LaTeX notation ($..$ for inline, $$...$$ for blocks)
+- Explain the reasoning behind each step
+- Box or highlight the final answer
+
+**For Science Problems:**
+- Identify relevant concepts/formulas
+- Apply step-by-step methodology
+- Include units and significant figures
+
+**For Multiple Choice:**
+- Analyze each option
+- Explain why the correct answer is right
+- Explain why wrong options are incorrect
+
+**For Diagrams/Graphs:**
+- Describe what you observe
+- Extract relevant data
+- Apply appropriate analysis
+
+Solve EVERY question in the image systematically. Make explanations educational and thorough.` 
               },
               {
                 type: 'image_url',
