@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Send, Loader2, Copy, Check, Paperclip, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocalChatHistory, LocalChatHistory } from '@/hooks/useLocalChatHistory';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -16,13 +16,6 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   fileUrl?: string;
-}
-
-interface ChatHistory {
-  id: string;
-  title: string;
-  created_at: string;
-  messages: Message[];
 }
 
 const ChatInterface = () => {
@@ -38,6 +31,7 @@ const ChatInterface = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { chats, createChat, updateChat, deleteChat } = useLocalChatHistory();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -103,7 +97,7 @@ const ChatInterface = () => {
     }
   };
 
-  const handleSelectChat = (chat: ChatHistory | null) => {
+  const handleSelectChat = (chat: LocalChatHistory | null) => {
     if (chat) {
       setCurrentChatId(chat.id);
       setMessages(chat.messages || []);
@@ -116,6 +110,14 @@ const ChatInterface = () => {
     setMessage('');
     setUploadedFile(null);
     setFilePreview(null);
+  };
+
+  const handleDeleteChat = (chatId: string) => {
+    deleteChat(chatId);
+    if (currentChatId === chatId) {
+      handleNewChat();
+    }
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const handleSend = async () => {
@@ -236,38 +238,20 @@ const ChatInterface = () => {
         }
       }
 
-      // Save or update chat in database
+      // Save or update chat in localStorage
       const finalMessages = [...updatedMessages, { role: 'assistant' as const, content: assistantResponse }];
       
       if (currentChatId) {
         // Update existing chat
-        await supabase
-          .from('chat_history')
-          .update({
-            messages: JSON.parse(JSON.stringify(finalMessages)),
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentChatId);
+        updateChat(currentChatId, finalMessages);
       } else {
         // Create new chat
         const historyTitle = currentFile 
           ? `File: ${currentFile.name.substring(0, 30)}`
           : userMessage.substring(0, 50);
           
-        const { data } = await supabase
-          .from('chat_history')
-          .insert([{
-            user_id: user!.id,
-            title: historyTitle,
-            type: 'chat',
-            messages: JSON.parse(JSON.stringify(finalMessages))
-          }])
-          .select()
-          .single();
-        
-        if (data) {
-          setCurrentChatId(data.id);
-        }
+        const newId = createChat(historyTitle, finalMessages);
+        setCurrentChatId(newId);
       }
       
       // Refresh sidebar
@@ -446,6 +430,8 @@ const ChatInterface = () => {
         currentChatId={currentChatId}
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
+        onDeleteChat={handleDeleteChat}
+        chats={chats}
         refreshTrigger={refreshTrigger}
       />
     </div>
