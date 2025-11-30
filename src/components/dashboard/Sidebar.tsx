@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface SidebarProps {
   activeView: string;
@@ -37,65 +38,84 @@ const Sidebar = ({ activeView, onViewChange }: SidebarProps) => {
   ];
 
   return (
-    <div className="relative flex">
-      {/* Toggle Button - Always visible */}
+    <div className="relative flex h-full">
+      {/* Toggle Button */}
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-4 z-20 transition-all duration-300 ${
-          isCollapsed ? 'left-2' : 'left-[216px]'
-        }`}
+        className={cn(
+          "absolute top-4 z-20 h-9 w-9 rounded-xl glass-card border border-border/50 hover:border-primary/50 transition-all duration-300",
+          isCollapsed ? "left-3" : "left-[224px]"
+        )}
       >
         {isCollapsed ? (
-          <PanelLeft className="w-5 h-5" />
+          <PanelLeft className="w-4 h-4 text-primary" />
         ) : (
-          <PanelLeftClose className="w-5 h-5" />
+          <PanelLeftClose className="w-4 h-4 text-primary" />
         )}
       </Button>
 
       {/* Sidebar Content */}
       <div 
-        className={`bg-background-secondary border-r border-border flex flex-col h-full transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-64 opacity-100'
-        }`}
+        className={cn(
+          "glass-card border-r border-border/50 flex flex-col h-full transition-all duration-300 ease-in-out relative overflow-hidden",
+          isCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-64 opacity-100"
+        )}
       >
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent whitespace-nowrap">
+        {/* Decorative gradient orb */}
+        <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl animate-glow pointer-events-none" />
+        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-accent/20 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2s' }} />
+
+        {/* Logo */}
+        <div className="p-6 border-b border-border/50 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold neon-text whitespace-nowrap">
               Questro
             </h1>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
-          {menuItems.map((item) => (
-            <Button
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-2 relative z-10">
+          {menuItems.map((item, index) => (
+            <button
               key={item.id}
-              variant={activeView === item.id ? 'default' : 'ghost'}
-              className={`w-full justify-start whitespace-nowrap ${
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap group",
                 activeView === item.id 
-                  ? 'bg-gradient-primary text-foreground' 
-                  : 'hover:bg-surface'
-              }`}
+                  ? "neon-button text-white shadow-glow" 
+                  : "hover:bg-surface/80 text-muted-foreground hover:text-foreground border border-transparent hover:border-primary/30"
+              )}
               onClick={() => onViewChange(item.id as any)}
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <item.icon className="w-4 h-4 mr-2" />
-              {item.label}
-            </Button>
+              <item.icon className={cn(
+                "w-5 h-5 transition-all duration-300",
+                activeView === item.id ? "text-white" : "text-primary group-hover:text-primary"
+              )} />
+              <span>{item.label}</span>
+              {activeView === item.id && (
+                <div className="ml-auto w-2 h-2 rounded-full bg-accent animate-pulse" />
+              )}
+            </button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <Button
-            variant="ghost"
-            className="w-full justify-start hover:bg-surface whitespace-nowrap"
+        {/* Sign Out */}
+        <div className="p-4 border-t border-border/50 relative z-10">
+          <button
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300 whitespace-nowrap border border-transparent hover:border-destructive/30"
             onClick={handleSignOut}
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+            <LogOut className="w-5 h-5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </div>
     </div>

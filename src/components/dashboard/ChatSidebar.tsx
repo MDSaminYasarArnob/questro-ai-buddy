@@ -8,7 +8,8 @@ import {
   PanelRightClose, 
   PanelRight, 
   Trash2, 
-  MessageCircle
+  MessageCircle,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -47,74 +48,98 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, onDeleteChat, cha
   };
 
   return (
-    <div className="relative flex">
-      {/* Toggle Button - Always visible on the left side of this component */}
+    <div className="relative flex h-full">
+      {/* Toggle Button */}
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setIsCollapsed(!isCollapsed)}
         className={cn(
-          "absolute top-3 z-10 h-8 w-8 bg-surface border border-border shadow-sm hover:bg-muted transition-all duration-300",
-          isCollapsed ? "right-2" : "right-[248px]"
+          "absolute top-4 z-20 h-9 w-9 rounded-xl glass-card border border-border/50 hover:border-primary/50 transition-all duration-300",
+          isCollapsed ? "right-3" : "right-[256px]"
         )}
       >
         {isCollapsed ? (
-          <PanelRight className="w-4 h-4" />
+          <PanelRight className="w-4 h-4 text-primary" />
         ) : (
-          <PanelRightClose className="w-4 h-4" />
+          <PanelRightClose className="w-4 h-4 text-primary" />
         )}
       </Button>
 
-      {/* Sidebar - on right side */}
+      {/* Sidebar */}
       <div 
         className={cn(
-          "h-full bg-surface border-l border-border flex flex-col transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-64 opacity-100"
+          "h-full glass-card border-l border-border/50 flex flex-col transition-all duration-300 ease-in-out relative overflow-hidden",
+          isCollapsed ? "w-0 opacity-0 overflow-hidden" : "w-72 opacity-100"
         )}
       >
+        {/* Decorative gradient */}
+        <div className="absolute -top-20 -right-20 w-40 h-40 bg-accent/20 rounded-full blur-3xl animate-glow pointer-events-none" />
+
         {/* Header */}
-        <div className="p-3 border-b border-border flex items-center gap-2 min-w-[256px]">
+        <div className="p-4 border-b border-border/50 min-w-[288px] relative z-10">
           <Button
             onClick={onNewChat}
-            className="flex-1 bg-gradient-primary hover:opacity-90"
-            size="sm"
+            className="w-full neon-button rounded-xl h-12 font-semibold"
           >
-            <MessageSquarePlus className="w-4 h-4 mr-2" />
+            <MessageSquarePlus className="w-5 h-5 mr-2" />
             New Chat
           </Button>
         </div>
 
         {/* Chat list */}
-        <ScrollArea className="flex-1 min-w-[256px]">
+        <ScrollArea className="flex-1 min-w-[288px] relative z-10">
           {chats.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground text-sm">
-              No conversations yet
+            <div className="p-6 text-center space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-primary/20 border border-primary/30 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">No conversations yet</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Start chatting to see your history</p>
+              </div>
             </div>
           ) : (
-            <div className="p-2 space-y-1">
-              {chats.map((chat) => (
+            <div className="p-3 space-y-2">
+              {chats.map((chat, index) => (
                 <div
                   key={chat.id}
                   onClick={() => onSelectChat(chat)}
                   className={cn(
-                    "group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors",
+                    "group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 animate-fade-in",
                     currentChatId === chat.id
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted/50 text-foreground"
+                      ? "glass-card border border-primary/50 shadow-glow"
+                      : "hover:bg-surface/50 border border-transparent hover:border-border/50"
                   )}
+                  style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  <div className={cn(
+                    "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300",
+                    currentChatId === chat.id 
+                      ? "bg-gradient-primary" 
+                      : "bg-surface group-hover:bg-primary/20"
+                  )}>
+                    <MessageCircle className={cn(
+                      "w-4 h-4 transition-colors",
+                      currentChatId === chat.id ? "text-white" : "text-primary"
+                    )} />
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{chat.title}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(chat.created_at)}</p>
+                    <p className={cn(
+                      "text-sm font-medium truncate transition-colors",
+                      currentChatId === chat.id ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    )}>
+                      {chat.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">{formatDate(chat.created_at)}</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-destructive/10 hover:text-destructive rounded-lg"
                     onClick={(e) => handleDelete(e, chat.id)}
                   >
-                    <Trash2 className="w-3 h-3 text-destructive" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               ))}

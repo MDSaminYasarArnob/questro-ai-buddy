@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Sparkles, Camera, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import ReactMarkdown from 'react-markdown';
@@ -83,27 +83,40 @@ const ImageSolver = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-2">Image Question Solver</h2>
-        <p className="text-muted-foreground">
-          Upload an image of your question paper and get solutions in any language
-        </p>
+    <div className="p-8 max-w-4xl mx-auto relative">
+      {/* Decorative orbs */}
+      <div className="absolute top-20 left-10 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-glow pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2s' }} />
+
+      <div className="mb-8 animate-fade-in relative z-10">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+            <Camera className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold neon-text">Image Question Solver</h2>
+            <p className="text-sm text-muted-foreground">
+              Snap, upload, and get step-by-step solutions instantly
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card className="p-8 bg-card border-border shadow-soft mb-6">
-        <div className="flex flex-col items-center justify-center py-12">
+      <Card className="glass-card glow-border rounded-2xl p-8 mb-6 animate-slide-up relative z-10">
+        <div className="flex flex-col items-center justify-center py-8">
           {!imagePreview ? (
             <>
-              <ImageIcon className="w-16 h-16 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Upload Question Image</h3>
-              <p className="text-muted-foreground text-center mb-6 max-w-md">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-primary/20 border border-primary/30 flex items-center justify-center mb-6 animate-float">
+                <ImageIcon className="w-12 h-12 text-primary" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-2 text-foreground">Upload Question Image</h3>
+              <p className="text-muted-foreground text-center mb-8 max-w-md">
                 Take a photo or upload an image of your questions. AI will solve them step-by-step.
               </p>
               
               <label htmlFor="image-upload" className="cursor-pointer">
-                <div className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-primary hover:opacity-90 transition-opacity font-medium text-primary-foreground">
-                  <Upload className="w-4 h-4" />
+                <div className="neon-button inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white">
+                  <Upload className="w-5 h-5" />
                   Choose Image
                 </div>
                 <input
@@ -117,19 +130,21 @@ const ImageSolver = () => {
               </label>
             </>
           ) : (
-            <div className="w-full space-y-4">
+            <div className="w-full space-y-6">
               <div className="relative w-full max-w-2xl mx-auto">
-                <img 
-                  src={imagePreview} 
-                  alt="Uploaded question" 
-                  className="w-full h-auto rounded-lg border border-border"
-                />
+                <div className="glass-card rounded-2xl p-2 border border-border/50">
+                  <img 
+                    src={imagePreview} 
+                    alt="Uploaded question" 
+                    className="w-full h-auto rounded-xl"
+                  />
+                </div>
               </div>
               
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-4 justify-center">
                 <label htmlFor="image-upload-change" className="cursor-pointer">
-                  <div className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors font-medium">
-                    <Upload className="w-4 h-4" />
+                  <div className="glass-card inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-foreground border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300">
+                    <Upload className="w-4 h-4 text-primary" />
                     Change Image
                   </div>
                   <input
@@ -145,15 +160,18 @@ const ImageSolver = () => {
                 <button
                   onClick={handleSolve}
                   disabled={loading}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-primary hover:opacity-90 transition-opacity font-medium text-primary-foreground disabled:opacity-50"
+                  className="neon-button inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-semibold text-white disabled:opacity-50"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin" />
                       Solving...
                     </>
                   ) : (
-                    'Solve Now'
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Solve Now
+                    </>
                   )}
                 </button>
               </div>
@@ -163,9 +181,14 @@ const ImageSolver = () => {
       </Card>
 
       {solution && (
-        <Card className="p-6 bg-card border-border shadow-soft">
-          <h3 className="text-xl font-semibold mb-4 text-foreground">Solution:</h3>
-          <div className="text-foreground max-w-none prose prose-invert max-w-full">
+        <Card className="glass-card glow-border rounded-2xl p-6 animate-slide-up relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground">Solution</h3>
+          </div>
+          <div className="prose prose-invert max-w-none prose-p:my-3 prose-headings:text-foreground prose-code:text-accent prose-strong:text-foreground">
             <ReactMarkdown
               remarkPlugins={[remarkMath]}
               rehypePlugins={[rehypeKatex]}
