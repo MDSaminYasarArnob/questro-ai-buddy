@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Loader2, Copy, Check, Paperclip, X } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Paperclip, X, Sparkles, Bot, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalChatHistory, LocalChatHistory } from '@/hooks/useLocalChatHistory';
 import ReactMarkdown from 'react-markdown';
@@ -156,7 +156,6 @@ const ChatInterface = () => {
     setMessages(updatedMessages);
     setLoading(true);
 
-    // Add an empty assistant message that we'll stream into
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
     try {
@@ -238,14 +237,11 @@ const ChatInterface = () => {
         }
       }
 
-      // Save or update chat in localStorage
       const finalMessages = [...updatedMessages, { role: 'assistant' as const, content: assistantResponse }];
       
       if (currentChatId) {
-        // Update existing chat
         updateChat(currentChatId, finalMessages);
       } else {
-        // Create new chat
         const historyTitle = currentFile 
           ? `File: ${currentFile.name.substring(0, 30)}`
           : userMessage.substring(0, 50);
@@ -254,11 +250,9 @@ const ChatInterface = () => {
         setCurrentChatId(newId);
       }
       
-      // Refresh sidebar
       setRefreshTrigger(prev => prev + 1);
 
     } catch (error: any) {
-      // Remove the empty assistant message on error
       setMessages(prev => prev.slice(0, -1));
       toast({
         title: "Error",
@@ -271,77 +265,119 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="h-full flex">
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col p-6">
+    <div className="h-full flex relative">
+      {/* Decorative background orbs */}
+      <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-glow pointer-events-none" />
+      <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '3s' }} />
 
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold">AI Chat Assistant</h2>
-          <p className="text-sm text-muted-foreground">
-            Ask anything - your AI study buddy is here to help
-          </p>
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col p-6 relative z-10">
+
+        <div className="mb-6 animate-fade-in">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold neon-text">AI Chat Assistant</h2>
+              <p className="text-sm text-muted-foreground">
+                Your intelligent study companion powered by advanced AI
+              </p>
+            </div>
+          </div>
         </div>
 
-        <Card className="flex-1 flex flex-col bg-background-card border-border shadow-soft overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <Card className="flex-1 flex flex-col glass-card glow-border rounded-2xl overflow-hidden animate-slide-up">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {messages.length === 0 ? (
-              <div className="h-full flex items-center justify-center">
-                <p className="text-muted-foreground text-center">
-                  Start a conversation! Ask me anything about your studies.
-                </p>
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+                <div className="w-24 h-24 rounded-3xl bg-gradient-primary/20 border border-primary/30 flex items-center justify-center animate-float">
+                  <Bot className="w-12 h-12 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">Start a conversation</h3>
+                  <p className="text-muted-foreground max-w-md">
+                    Ask me anything about your studies. I can help with math, science, coding, and more!
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center max-w-lg">
+                  {['Explain quantum physics', 'Help with calculus', 'Debug my code', 'Essay writing tips'].map((suggestion, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setMessage(suggestion)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium glass-card border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 text-muted-foreground hover:text-foreground"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : (
               <>
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
+                    className={`flex gap-4 animate-fade-in ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                    style={{ animationDelay: `${idx * 0.1}s` }}
                   >
-                    <div
-                      className={`max-w-[80%] p-4 rounded-lg ${
-                        msg.role === 'user'
-                          ? 'bg-gradient-primary text-foreground'
-                          : 'bg-surface text-foreground'
-                      }`}
-                    >
+                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                      msg.role === 'user' 
+                        ? 'bg-gradient-primary' 
+                        : 'glass-card border border-primary/30'
+                    }`}>
                       {msg.role === 'user' ? (
-                        <div className="space-y-2">
-                          {msg.fileUrl && (
-                            <img src={msg.fileUrl} alt="Uploaded" className="max-w-xs rounded" />
-                          )}
-                          <p>{msg.content}</p>
-                        </div>
+                        <User className="w-5 h-5 text-white" />
                       ) : (
-                        <div className="prose prose-invert max-w-none">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkMath]}
-                            rehypePlugins={[rehypeKatex]}
-                          >
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
+                        <Bot className="w-5 h-5 text-primary" />
                       )}
                     </div>
-                    {msg.role === 'assistant' && msg.content && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyToClipboard(msg.content, idx)}
-                        className="mt-1 h-6 text-xs text-muted-foreground hover:text-foreground"
+                    <div className={`flex flex-col max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                      <div
+                        className={`p-4 rounded-2xl ${
+                          msg.role === 'user'
+                            ? 'neon-button text-white rounded-tr-sm'
+                            : 'glass-card border border-border/50 text-foreground rounded-tl-sm'
+                        }`}
                       >
-                        {copiedIndex === idx ? (
-                          <>
-                            <Check className="w-3 h-3 mr-1" />
-                            Copied
-                          </>
+                        {msg.role === 'user' ? (
+                          <div className="space-y-2">
+                            {msg.fileUrl && (
+                              <img src={msg.fileUrl} alt="Uploaded" className="max-w-xs rounded-lg" />
+                            )}
+                            <p className="whitespace-pre-wrap">{msg.content}</p>
+                          </div>
                         ) : (
-                          <>
-                            <Copy className="w-3 h-3 mr-1" />
-                            Copy
-                          </>
+                          <div className="prose prose-invert max-w-none prose-p:my-2 prose-headings:text-foreground prose-code:text-accent prose-strong:text-foreground">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkMath]}
+                              rehypePlugins={[rehypeKatex]}
+                            >
+                              {msg.content}
+                            </ReactMarkdown>
+                          </div>
                         )}
-                      </Button>
-                    )}
+                      </div>
+                      {msg.role === 'assistant' && msg.content && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(msg.content, idx)}
+                          className="mt-2 h-8 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
+                        >
+                          {copiedIndex === idx ? (
+                            <>
+                              <Check className="w-3 h-3 mr-1 text-green-400" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3 mr-1" />
+                              Copy
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
@@ -349,19 +385,19 @@ const ChatInterface = () => {
             )}
           </div>
 
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm">
             {uploadedFile && (
-              <div className="mb-3 p-3 bg-surface rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="mb-3 p-3 glass-card rounded-xl flex items-center justify-between border border-border/50">
+                <div className="flex items-center gap-3">
                   {filePreview ? (
-                    <img src={filePreview} alt="Preview" className="w-12 h-12 rounded object-cover" />
+                    <img src={filePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover" />
                   ) : (
-                    <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
-                      <Paperclip className="w-6 h-6 text-muted-foreground" />
+                    <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                      <Paperclip className="w-6 h-6 text-primary" />
                     </div>
                   )}
                   <div className="text-sm">
-                    <p className="font-medium">{uploadedFile.name}</p>
+                    <p className="font-medium text-foreground">{uploadedFile.name}</p>
                     <p className="text-muted-foreground">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 </div>
@@ -370,6 +406,7 @@ const ChatInterface = () => {
                   size="sm"
                   onClick={removeFile}
                   disabled={loading}
+                  className="hover:bg-destructive/10 hover:text-destructive rounded-lg"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -377,12 +414,12 @@ const ChatInterface = () => {
             )}
             
             <div className="flex gap-3">
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-3">
                 <Textarea
-                  placeholder="Type your message here..."
+                  placeholder="Ask me anything..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="bg-surface border-border resize-none"
+                  className="glass-card border-border/50 focus:border-primary/50 resize-none rounded-xl min-h-[80px] text-foreground placeholder:text-muted-foreground"
                   rows={2}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -403,16 +440,16 @@ const ChatInterface = () => {
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loading || !!uploadedFile}
-                  className="border-border hover:bg-surface"
+                  className="glass-card border-border/50 hover:border-primary/50 hover:bg-primary/10 rounded-xl"
                 >
-                  <Paperclip className="w-4 h-4 mr-2" />
+                  <Paperclip className="w-4 h-4 mr-2 text-primary" />
                   Attach File
                 </Button>
               </div>
               <Button
                 onClick={handleSend}
                 disabled={loading || (!message.trim() && !uploadedFile)}
-                className="bg-gradient-primary hover:opacity-90 self-end"
+                className="neon-button rounded-xl self-end h-12 w-12 p-0"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -425,7 +462,7 @@ const ChatInterface = () => {
         </Card>
       </div>
 
-      {/* Chat Sidebar - Right Side */}
+      {/* Chat Sidebar */}
       <ChatSidebar 
         currentChatId={currentChatId}
         onSelectChat={handleSelectChat}
