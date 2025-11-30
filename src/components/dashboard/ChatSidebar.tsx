@@ -1,92 +1,37 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { LocalChatHistory } from '@/hooks/useLocalChatHistory';
 import { 
   MessageSquarePlus, 
   PanelRightClose, 
   PanelRight, 
   Trash2, 
-  MessageCircle,
-  Loader2
+  MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ChatHistory {
-  id: string;
-  title: string;
-  created_at: string;
-  messages: any[];
-}
-
 interface ChatSidebarProps {
   currentChatId: string | null;
-  onSelectChat: (chat: ChatHistory | null) => void;
+  onSelectChat: (chat: LocalChatHistory | null) => void;
   onNewChat: () => void;
+  onDeleteChat: (chatId: string) => void;
+  chats: LocalChatHistory[];
   refreshTrigger: number;
 }
 
-const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, refreshTrigger }: ChatSidebarProps) => {
+const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, onDeleteChat, chats }: ChatSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [chats, setChats] = useState<ChatHistory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchChats = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('chat_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('type', 'chat')
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      setChats((data || []) as ChatHistory[]);
-    } catch (error) {
-      console.error('Error fetching chats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchChats();
-  }, [user, refreshTrigger]);
-
-  const handleDelete = async (e: React.MouseEvent, chatId: string) => {
+  const handleDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    
-    try {
-      const { error } = await supabase
-        .from('chat_history')
-        .delete()
-        .eq('id', chatId);
-
-      if (error) throw error;
-
-      setChats(prev => prev.filter(c => c.id !== chatId));
-      
-      if (currentChatId === chatId) {
-        onNewChat();
-      }
-
-      toast({
-        title: "Chat deleted",
-        description: "The conversation has been removed",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete chat",
-        variant: "destructive",
-      });
-    }
+    onDeleteChat(chatId);
+    toast({
+      title: "Chat deleted",
+      description: "The conversation has been removed",
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -141,11 +86,7 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, refreshTrigger }:
 
         {/* Chat list */}
         <ScrollArea className="flex-1 min-w-[256px]">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : chats.length === 0 ? (
+          {chats.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground text-sm">
               No conversations yet
             </div>
