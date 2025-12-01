@@ -91,14 +91,10 @@ const History = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto relative">
-      {/* Decorative orbs */}
-      <div className="absolute top-10 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-glow pointer-events-none" />
-      <div className="absolute bottom-20 left-20 w-60 h-60 bg-accent/10 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2s' }} />
-
-      <div className="mb-8 animate-fade-in relative z-10">
+    <div className="p-8 max-w-4xl mx-auto">
+      <div className="mb-8 animate-fade-in">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
             <HistoryIcon className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -111,28 +107,27 @@ const History = () => {
       </div>
 
       {loading ? (
-        <Card className="glass-card rounded-2xl p-12 text-center animate-pulse relative z-10">
+        <Card className="glass-card rounded-2xl p-12 text-center">
           <p className="text-muted-foreground">Loading...</p>
         </Card>
       ) : history.length === 0 ? (
-        <Card className="glass-card glow-border rounded-2xl p-12 text-center animate-slide-up relative z-10">
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-primary/20 border border-primary/30 flex items-center justify-center mb-6 animate-float">
+        <Card className="glass-card glow-border rounded-2xl p-12 text-center">
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center mb-6">
             <Sparkles className="w-10 h-10 text-primary" />
           </div>
           <h3 className="text-xl font-semibold mb-2 text-foreground">No history yet</h3>
           <p className="text-muted-foreground">Start using Questro to see your activity here!</p>
         </Card>
       ) : (
-        <div className="space-y-4 relative z-10">
-          {history.map((item, index) => (
+        <div className="space-y-4">
+          {history.map((item) => (
             <Card 
               key={item.id} 
-              className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all duration-300 group animate-fade-in hover-lift"
-              style={{ animationDelay: `${index * 0.05}s` }}
+              className="glass-card rounded-xl p-5 hover:border-primary/30 transition-colors duration-200 group"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4 flex-1">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-primary/20 flex items-center justify-center shrink-0 group-hover:bg-gradient-primary/30 transition-colors">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-card flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                     <span className="text-primary">
                       {getIcon(item.type)}
                     </span>
@@ -154,7 +149,7 @@ const History = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => deleteItem(item.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-destructive/10 hover:text-destructive rounded-lg"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
