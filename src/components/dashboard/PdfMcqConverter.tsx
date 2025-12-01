@@ -109,14 +109,10 @@ const PdfMcqConverter = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto relative">
-      {/* Decorative orbs */}
-      <div className="absolute top-10 right-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-glow pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-60 h-60 bg-accent/10 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2s' }} />
-
-      <div className="mb-8 animate-fade-in relative z-10">
+    <div className="p-8 max-w-4xl mx-auto">
+      <div className="mb-8 animate-fade-in">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -129,10 +125,10 @@ const PdfMcqConverter = () => {
       </div>
 
       {questions.length === 0 ? (
-        <Card className="glass-card glow-border rounded-2xl p-8 mb-6 animate-slide-up relative z-10">
+        <Card className="glass-card glow-border rounded-2xl p-8 mb-6">
           {!pdfFile ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-primary/20 border border-primary/30 flex items-center justify-center mb-6 animate-float">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center mb-6">
                 <FileText className="w-12 h-12 text-primary" />
               </div>
               <h3 className="text-2xl font-semibold mb-2 text-foreground">Upload Your PDF</h3>
@@ -158,7 +154,7 @@ const PdfMcqConverter = () => {
             <div className="space-y-6">
               <div className="flex items-center justify-between p-4 glass-card rounded-xl border border-border/50">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-primary/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-card flex items-center justify-center">
                     <FileText className="w-6 h-6 text-primary" />
                   </div>
                   <div>
@@ -220,7 +216,7 @@ const PdfMcqConverter = () => {
           )}
         </Card>
       ) : (
-        <div className="space-y-6 relative z-10 animate-slide-up">
+        <div className="space-y-6">
           <div className="flex items-center justify-between glass-card rounded-xl p-4 border border-border/50">
             <div>
               <h3 className="text-xl font-semibold text-foreground">Quiz: {pdfFile?.name}</h3>

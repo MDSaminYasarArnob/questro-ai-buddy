@@ -265,17 +265,13 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="h-full flex relative">
-      {/* Decorative background orbs */}
-      <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-glow pointer-events-none" />
-      <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '3s' }} />
-
+    <div className="h-full flex">
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col p-6 relative z-10">
+      <div className="flex-1 flex flex-col p-6">
 
         <div className="mb-6 animate-fade-in">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -287,11 +283,11 @@ const ChatInterface = () => {
           </div>
         </div>
 
-        <Card className="flex-1 flex flex-col glass-card glow-border rounded-2xl overflow-hidden animate-slide-up">
+        <Card className="flex-1 flex flex-col glass-card glow-border rounded-2xl overflow-hidden">
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-                <div className="w-24 h-24 rounded-3xl bg-gradient-primary/20 border border-primary/30 flex items-center justify-center animate-float">
+                <div className="w-24 h-24 rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center">
                   <Bot className="w-12 h-12 text-primary" />
                 </div>
                 <div className="space-y-2">
@@ -305,7 +301,7 @@ const ChatInterface = () => {
                     <button
                       key={i}
                       onClick={() => setMessage(suggestion)}
-                      className="px-4 py-2 rounded-xl text-sm font-medium glass-card border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 text-muted-foreground hover:text-foreground"
+                      className="px-4 py-2 rounded-xl text-sm font-medium glass-card border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-colors duration-200 text-muted-foreground hover:text-foreground"
                     >
                       {suggestion}
                     </button>
@@ -318,7 +314,6 @@ const ChatInterface = () => {
                   <div
                     key={idx}
                     className={`flex gap-4 animate-fade-in ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
-                    style={{ animationDelay: `${idx * 0.1}s` }}
                   >
                     <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
                       msg.role === 'user' 
@@ -385,7 +380,7 @@ const ChatInterface = () => {
             )}
           </div>
 
-          <div className="p-4 border-t border-border/50 bg-background/50 backdrop-blur-sm">
+          <div className="p-4 border-t border-border/50 bg-background/80">
             {uploadedFile && (
               <div className="mb-3 p-3 glass-card rounded-xl flex items-center justify-between border border-border/50">
                 <div className="flex items-center gap-3">

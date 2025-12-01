@@ -83,14 +83,10 @@ const ImageSolver = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto relative">
-      {/* Decorative orbs */}
-      <div className="absolute top-20 left-10 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-glow pointer-events-none" />
-      <div className="absolute bottom-20 right-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-glow pointer-events-none" style={{ animationDelay: '2s' }} />
-
-      <div className="mb-8 animate-fade-in relative z-10">
+    <div className="p-8 max-w-4xl mx-auto">
+      <div className="mb-8 animate-fade-in">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
             <Camera className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -102,11 +98,11 @@ const ImageSolver = () => {
         </div>
       </div>
 
-      <Card className="glass-card glow-border rounded-2xl p-8 mb-6 animate-slide-up relative z-10">
+      <Card className="glass-card glow-border rounded-2xl p-8 mb-6">
         <div className="flex flex-col items-center justify-center py-8">
           {!imagePreview ? (
             <>
-              <div className="w-24 h-24 rounded-3xl bg-gradient-primary/20 border border-primary/30 flex items-center justify-center mb-6 animate-float">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center mb-6">
                 <ImageIcon className="w-12 h-12 text-primary" />
               </div>
               <h3 className="text-2xl font-semibold mb-2 text-foreground">Upload Question Image</h3>
@@ -143,7 +139,7 @@ const ImageSolver = () => {
               
               <div className="flex gap-4 justify-center">
                 <label htmlFor="image-upload-change" className="cursor-pointer">
-                  <div className="glass-card inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-foreground border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300">
+                  <div className="glass-card inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-foreground border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-colors duration-200">
                     <Upload className="w-4 h-4 text-primary" />
                     Change Image
                   </div>
@@ -181,7 +177,7 @@ const ImageSolver = () => {
       </Card>
 
       {solution && (
-        <Card className="glass-card glow-border rounded-2xl p-6 animate-slide-up relative z-10">
+        <Card className="glass-card glow-border rounded-2xl p-6 animate-fade-in">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
               <CheckCircle className="w-5 h-5 text-green-400" />
