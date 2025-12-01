@@ -271,8 +271,8 @@ const ChatInterface = () => {
 
         <div className="mb-6 animate-fade-in">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="w-14 h-14 rounded-2xl bg-gradient-primary flex items-center justify-center shrink-0">
+              <Bot className="w-8 h-8 text-white" />
             </div>
             <div>
               <h2 className="text-3xl font-bold neon-text">AI Chat Assistant</h2>
