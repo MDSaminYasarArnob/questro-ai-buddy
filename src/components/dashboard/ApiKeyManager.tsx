@@ -174,14 +174,24 @@ const ApiKeyManager = () => {
           <li>Create a new API key or use an existing one</li>
           <li>Copy and paste it here</li>
         </ol>
-        <Button
-          variant="outline"
-          className="mt-4 border-primary text-primary hover:bg-primary/10"
-          onClick={() => window.open('https://makersuite.google.com/app/apikey', '_blank')}
-        >
-          <ExternalLink className="w-4 h-4 mr-2" />
-          Get API Key
-        </Button>
+        <div className="flex flex-wrap gap-3 mt-4">
+          <Button
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary/10"
+            onClick={() => window.open('https://makersuite.google.com/app/apikey', '_blank')}
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Get API Key
+          </Button>
+          <Button
+            variant="outline"
+            className="border-accent text-accent hover:bg-accent/10"
+            onClick={() => window.open('https://youtu.be/czN-laeLxr8?si=rpeOVOYXX7OXlTcf', '_blank')}
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Watch Video Tutorial
+          </Button>
+        </div>
       </Card>
     </div>
   );

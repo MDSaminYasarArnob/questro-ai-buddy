@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,24 +14,60 @@ serve(async (req) => {
   try {
     const { imageBase64 } = await req.json();
 
-    console.log('Processing image with Lovable AI Gateway...');
+    // Get user's API key from the database
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authorization required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Please sign in to use this feature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: apiKeyData, error: keyError } = await supabase
+      .from('api_keys')
+      .select('api_key')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (keyError || !apiKeyData?.api_key) {
+      return new Response(
+        JSON.stringify({ error: 'Please add your Gemini API key in Settings' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const GEMINI_API_KEY = apiKeyData.api_key;
+
+    console.log('Processing image with Gemini API...');
 
     const response = await fetch(
-      'https://ai.gateway.lovable.dev/v1/chat/completions',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-pro',
-          messages: [{
-            role: 'user',
-            content: [
+          contents: [{
+            parts: [
               { 
-                type: 'text', 
-                text: `You are Questro AI - an expert problem solver capable of handling ANY academic question. Analyze the image and provide complete, detailed solutions.
+                text: `You are Questro AI - an expert problem solver. Analyze the image and provide complete, detailed solutions.
+
+**CRITICAL:** Respond in the SAME language as any text in the image. If the image contains Hindi, respond in Hindi. If English, respond in English.
 
 **For Mathematical Problems:**
 - State what the question asks
@@ -44,32 +81,43 @@ serve(async (req) => {
 - Include units and significant figures
 
 **For Multiple Choice:**
-- Analyze each option
+- State the correct answer clearly ONCE
 - Explain why the correct answer is right
-- Explain why wrong options are incorrect
+- Briefly explain why wrong options are incorrect
 
 **For Diagrams/Graphs:**
 - Describe what you observe
 - Extract relevant data
 - Apply appropriate analysis
 
-Solve EVERY question in the image systematically. Make explanations educational and thorough.` 
+Solve EVERY question in the image systematically. Give ONE clear answer per question - no repetition.` 
               },
               {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: imageBase64
                 }
               }
             ]
-          }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 8192,
+          }
         })
       }
     );
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('AI Gateway error:', response.status, error);
+      console.error('Gemini API error:', response.status, error);
+      
+      if (response.status === 400 && error.includes('API_KEY_INVALID')) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid API key. Please check your Gemini API key in Settings.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       
       if (response.status === 429) {
         return new Response(
@@ -78,21 +126,14 @@ Solve EVERY question in the image systematically. Make explanations educational 
         );
       }
       
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
       return new Response(
-        JSON.stringify({ error: 'Failed to analyze image' }),
+        JSON.stringify({ error: 'Failed to analyze image. Please check your API key.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
-    const solution = data.choices?.[0]?.message?.content || 'No solution generated';
+    const solution = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No solution generated';
 
     console.log('Solution generated successfully');
 

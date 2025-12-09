@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,49 +14,97 @@ serve(async (req) => {
   try {
     const { pdfBase64, mcqCount = 10 } = await req.json();
     const questionCount = Math.min(50, Math.max(1, parseInt(mcqCount) || 10));
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY is not configured');
+    // Get user's API key from the database
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'AI service not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Authorization required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Please sign in to use this feature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: apiKeyData, error: keyError } = await supabase
+      .from('api_keys')
+      .select('api_key')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (keyError || !apiKeyData?.api_key) {
+      return new Response(
+        JSON.stringify({ error: 'Please add your Gemini API key in Settings' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const GEMINI_API_KEY = apiKeyData.api_key;
+
     console.log(`Processing PDF to generate ${questionCount} MCQs...`);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
-        messages: [
-          {
-            role: 'user',
-            content: [
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
               {
-                type: 'text',
-                text: `Analyze this PDF document and generate exactly ${questionCount} multiple choice questions (MCQs) based on the key concepts. Return the response in this exact JSON format only, no other text:\n\n{"questions":[{"id":1,"question":"Question text here?","options":{"A":"Option A","B":"Option B","C":"Option C","D":"Option D"},"correctAnswer":"A","explanation":"Brief explanation of why this is correct"}]}\n\nRequirements:\n1. Generate exactly ${questionCount} questions\n2. Each question must have exactly 4 options (A, B, C, D)\n3. correctAnswer must be one of: A, B, C, D\n4. Include a brief explanation for each correct answer\n5. Make questions challenging but fair\n6. Cover different topics from the document\n7. Return ONLY valid JSON, no markdown or other text`
+                text: `Analyze this PDF document and generate exactly ${questionCount} multiple choice questions (MCQs) based on the key concepts. Return the response in this exact JSON format only, no other text:
+
+{"questions":[{"id":1,"question":"Question text here?","options":{"A":"Option A","B":"Option B","C":"Option C","D":"Option D"},"correctAnswer":"A","explanation":"Brief explanation of why this is correct"}]}
+
+Requirements:
+1. Generate exactly ${questionCount} questions
+2. Each question must have exactly 4 options (A, B, C, D)
+3. correctAnswer must be one of: A, B, C, D
+4. Include a brief explanation for each correct answer
+5. Make questions challenging but fair
+6. Cover different topics from the document
+7. Return ONLY valid JSON, no markdown or other text`
               },
               {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${pdfBase64}`
+                inline_data: {
+                  mime_type: 'application/pdf',
+                  data: pdfBase64
                 }
               }
             ]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 8192,
           }
-        ]
-      })
-    });
+        })
+      }
+    );
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Lovable AI error:', response.status, error);
+      console.error('Gemini API error:', response.status, error);
+      
+      if (response.status === 400 && error.includes('API_KEY_INVALID')) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid API key. Please check your Gemini API key in Settings.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       
       if (response.status === 429) {
         return new Response(
@@ -64,44 +113,33 @@ serve(async (req) => {
         );
       }
       
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
       return new Response(
-        JSON.stringify({ error: 'Failed to convert PDF to MCQs' }),
+        JSON.stringify({ error: 'Failed to convert PDF. Please check your API key.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
     console.log('AI Response:', content);
 
     // Parse the JSON response
     let questions;
     try {
-      // Try to extract JSON from the response (in case there's extra text)
       const jsonMatch = content.match(/\{[\s\S]*"questions"[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         questions = parsed.questions;
       } else {
-        // Try parsing directly
         const parsed = JSON.parse(content);
         questions = parsed.questions;
       }
       
-      // Validate the structure
       if (!Array.isArray(questions) || questions.length === 0) {
         throw new Error('No questions found');
       }
       
-      // Ensure each question has required fields
       questions = questions.map((q: any, idx: number) => ({
         id: idx + 1,
         question: q.question || `Question ${idx + 1}`,
@@ -115,7 +153,6 @@ serve(async (req) => {
         explanation: q.explanation || 'No explanation provided.'
       }));
       
-      // Limit to requested count
       questions = questions.slice(0, questionCount);
       
     } catch (parseError) {
