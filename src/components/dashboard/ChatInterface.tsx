@@ -221,18 +221,21 @@ const ChatInterface = () => {
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               assistantResponse += content;
+              const currentResponse = assistantResponse;
               setMessages(prev => {
                 const newMessages = [...prev];
-                newMessages[newMessages.length - 1] = {
-                  role: 'assistant',
-                  content: assistantResponse
-                };
+                if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+                  newMessages[newMessages.length - 1] = {
+                    role: 'assistant',
+                    content: currentResponse
+                  };
+                }
                 return newMessages;
               });
             }
           } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
+            // Skip malformed JSON chunks instead of re-buffering
+            continue;
           }
         }
       }
