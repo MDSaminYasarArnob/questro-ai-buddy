@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,19 +13,55 @@ serve(async (req) => {
 
   try {
     const { messages, fileBase64, fileType } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY is not configured');
+    
+    // Get user's API key from the database
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'AI service not configured' }),
+        JSON.stringify({ error: 'Authorization required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Get the user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Please sign in to use the chat' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get user's Gemini API key
+    const { data: apiKeyData, error: keyError } = await supabase
+      .from('api_keys')
+      .select('api_key')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (keyError) {
+      console.error('Error fetching API key:', keyError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch API key' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Build content based on whether there's a file
-    let apiMessages: any[];
-    
+    if (!apiKeyData?.api_key) {
+      return new Response(
+        JSON.stringify({ error: 'Please add your Gemini API key in Settings to use the chat' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const GEMINI_API_KEY = apiKeyData.api_key;
+
     const systemPrompt = `You are Questro AI - an intelligent AI assistant for solving questions across all domains.
 
 **CRITICAL RULES:**
@@ -43,53 +80,71 @@ serve(async (req) => {
 
 Remember: ONE clear answer per question. No repetition. Match the user's language.`;
 
+    // Build content based on whether there's a file
+    let contents: any[];
+    
     if (fileBase64 && fileType) {
       const lastMessage = messages[messages.length - 1];
       const messageText = lastMessage?.content || 'Analyze this file and solve any questions or problems shown.';
       
-      const content = [
+      contents = [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: 'I understand. I will follow these guidelines.' }] },
+        ...messages.slice(0, -1).map((m: any) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }]
+        })),
         {
-          type: 'text',
-          text: messageText
-        },
-        {
-          type: 'image_url',
-          image_url: {
-            url: fileType === 'application/pdf' 
-              ? `data:application/pdf;base64,${fileBase64}`
-              : `data:${fileType};base64,${fileBase64}`
-          }
+          role: 'user',
+          parts: [
+            { text: messageText },
+            {
+              inline_data: {
+                mime_type: fileType,
+                data: fileBase64
+              }
+            }
+          ]
         }
       ];
-
-      apiMessages = [
-        { role: 'system', content: systemPrompt },
-        ...messages.slice(0, -1),
-        { role: 'user', content: content }
-      ];
     } else {
-      apiMessages = [
-        { role: 'system', content: systemPrompt },
-        ...messages
+      contents = [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: 'I understand. I will follow these guidelines.' }] },
+        ...messages.map((m: any) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }]
+        }))
       ];
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
-        messages: apiMessages,
-        stream: true,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 8192,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', response.status, errorText);
+      console.error('Gemini API error:', response.status, errorText);
+      
+      if (response.status === 400 && errorText.includes('API_KEY_INVALID')) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid API key. Please check your Gemini API key in Settings.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       
       if (response.status === 429) {
         return new Response(
@@ -97,22 +152,61 @@ Remember: ONE clear answer per question. No repetition. Match the user's languag
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI service quota exceeded. Please contact support.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
 
       return new Response(
-        JSON.stringify({ error: 'Failed to get AI response' }),
+        JSON.stringify({ error: 'Failed to get AI response. Please check your API key.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Return the stream directly
-    return new Response(response.body, {
+    // Transform Gemini SSE to OpenAI-compatible format
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    (async () => {
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6).trim();
+              if (!jsonStr) continue;
+              
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                  const openAIFormat = {
+                    choices: [{
+                      delta: { content: text }
+                    }]
+                  };
+                  await writer.write(encoder.encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
+                }
+              } catch (e) {
+                // Skip malformed JSON
+              }
+            }
+          }
+        }
+        await writer.write(encoder.encode('data: [DONE]\n\n'));
+      } catch (e) {
+        console.error('Stream error:', e);
+      } finally {
+        await writer.close();
+      }
+    })();
+
+    return new Response(readable, {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
   } catch (error) {

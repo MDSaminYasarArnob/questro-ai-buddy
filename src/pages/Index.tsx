@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, MessageSquare, FileText, Image, History, ArrowRight, CheckCircle2, Zap, Brain, Globe } from 'lucide-react';
+import { Sparkles, MessageSquare, FileText, Image, History, ArrowRight, CheckCircle2, Zap, Brain, Globe, Key, Play } from 'lucide-react';
 import { useEffect } from 'react';
 
 const Index = () => {
@@ -101,7 +101,7 @@ const Index = () => {
               <span className="text-sm font-medium text-primary">Powerful Features</span>
             </div>
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">Everything You Need to Excel</h2>
-            <p className="text-muted-foreground text-lg">All tools work seamlessly with Lovable AI - no API keys required</p>
+            <p className="text-muted-foreground text-lg">Use your own Gemini API key - completely free!</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -146,6 +146,76 @@ const Index = () => {
           </div>
         </div>
 
+        {/* API Key Setup Section */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
+              <Key className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Easy Setup</span>
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Get Your Free Gemini API Key</h2>
+            <p className="text-muted-foreground text-lg">Follow these simple steps to start using Questro</p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <Card className="p-6 bg-background-card border-border shadow-soft">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Key className="w-5 h-5 text-primary" />
+                Step-by-Step Guide
+              </h3>
+              <ol className="space-y-3 text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm font-bold flex items-center justify-center shrink-0">1</span>
+                  <span>Go to <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a></span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm font-bold flex items-center justify-center shrink-0">2</span>
+                  <span>Sign in with your Google account</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm font-bold flex items-center justify-center shrink-0">3</span>
+                  <span>Click "Get API Key" → "Create API key"</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm font-bold flex items-center justify-center shrink-0">4</span>
+                  <span>Copy your API key</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-sm font-bold flex items-center justify-center shrink-0">5</span>
+                  <span>Paste it in Questro Settings after signing up</span>
+                </li>
+              </ol>
+              <Button
+                variant="outline"
+                className="mt-6 border-primary text-primary hover:bg-primary/10"
+                onClick={() => window.open('https://makersuite.google.com/app/apikey', '_blank')}
+              >
+                Get API Key Now
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Card>
+
+            <Card className="p-6 bg-background-card border-border shadow-soft">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Play className="w-5 h-5 text-primary" />
+                Video Tutorial
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Watch this quick video to learn how to get your Gemini API key in under 2 minutes!
+              </p>
+              <div className="aspect-video rounded-lg overflow-hidden bg-background border border-border">
+                <iframe
+                  src="https://www.youtube.com/embed/czN-laeLxr8"
+                  title="How to get Gemini API Key"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              </div>
+            </Card>
+          </div>
+        </div>
+
         {/* Benefits */}
         <Card className="p-8 lg:p-12 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 mb-20">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
@@ -161,12 +231,12 @@ const Index = () => {
             </div>
             <div className="space-y-4">
               {[
-                'No API keys needed - works out of the box',
+                'Free Gemini API - generous daily limits',
                 'Support for any language',
                 'Upload PDFs up to 50 pages',
                 'Instant image problem solving',
                 'Complete conversation history',
-                'Free to get started',
+                'Your API key stays private',
               ].map((benefit, idx) => (
                 <div key={idx} className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
                   <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
