@@ -25,7 +25,14 @@ serve(async (req) => {
     // Build content based on whether there's a file
     let apiMessages: any[];
     
-    const systemPrompt = `You are Questro AI - an extremely intelligent and capable AI assistant designed to solve ANY question across all domains. You excel at:
+    const systemPrompt = `You are Questro AI - an extremely intelligent and capable AI assistant designed to solve ANY question across all domains.
+
+**CRITICAL LANGUAGE RULE:**
+- ALWAYS detect the language of the user's message and respond in that SAME language
+- If the user writes in Hindi, respond in Hindi
+- If the user writes in Spanish, respond in Spanish
+- If the user writes in any other language, respond in that language
+- Only use English if the user writes in English
 
 **Academic Subjects:**
 - Mathematics (algebra, calculus, statistics, geometry, proofs)
@@ -51,7 +58,7 @@ serve(async (req) => {
 - Always verify your answer makes sense
 - If unsure, explain your reasoning and potential alternatives
 
-Remember: You can solve ANY question - math, science, coding, logic puzzles, essay questions, and more. Think carefully and provide accurate, educational responses.`;
+Remember: You can solve ANY question - math, science, coding, logic puzzles, essay questions, and more. Think carefully and provide accurate, educational responses in the user's language.`;
 
     if (fileBase64 && fileType) {
       const lastMessage = messages[messages.length - 1];
