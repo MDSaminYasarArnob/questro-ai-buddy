@@ -4,60 +4,47 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sparkles, MessageSquare, FileText, Image, History, ArrowRight, CheckCircle2, Zap, Brain, Globe, Key, Play } from 'lucide-react';
 import { useEffect } from 'react';
-
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-
+  const {
+    user
+  } = useAuth();
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
-
-  const features = [
-    {
-      icon: MessageSquare,
-      title: 'AI Chat Assistant',
-      description: 'Ask anything in any language - get instant, intelligent answers',
-    },
-    {
-      icon: FileText,
-      title: 'PDF to MCQ Generator',
-      description: 'Upload textbooks and automatically generate practice questions',
-    },
-    {
-      icon: Image,
-      title: 'Image Problem Solver',
-      description: 'Snap a picture of any question and get step-by-step solutions',
-    },
-    {
-      icon: History,
-      title: 'History Tracking',
-      description: 'Access all your previous conversations and generated content',
-    },
-  ];
-
-  const steps = [
-    {
-      number: '1',
-      title: 'Sign Up',
-      description: 'Create your free account in seconds',
-    },
-    {
-      number: '2',
-      title: 'Choose Your Tool',
-      description: 'Pick from Chat, PDF Converter, or Image Solver',
-    },
-    {
-      number: '3',
-      title: 'Start Learning',
-      description: 'Get instant AI-powered assistance with your studies',
-    },
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background-secondary">
+  const features = [{
+    icon: MessageSquare,
+    title: 'AI Chat Assistant',
+    description: 'Ask anything in any language - get instant, intelligent answers'
+  }, {
+    icon: FileText,
+    title: 'PDF to MCQ Generator',
+    description: 'Upload textbooks and automatically generate practice questions'
+  }, {
+    icon: Image,
+    title: 'Image Problem Solver',
+    description: 'Snap a picture of any question and get step-by-step solutions'
+  }, {
+    icon: History,
+    title: 'History Tracking',
+    description: 'Access all your previous conversations and generated content'
+  }];
+  const steps = [{
+    number: '1',
+    title: 'Sign Up',
+    description: 'Create your free account in seconds'
+  }, {
+    number: '2',
+    title: 'Choose Your Tool',
+    description: 'Pick from Chat, PDF Converter, or Image Solver'
+  }, {
+    number: '3',
+    title: 'Start Learning',
+    description: 'Get instant AI-powered assistance with your studies'
+  }];
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-background-secondary">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16 lg:py-24">
         <div className="text-center mb-16 animate-fade-in">
@@ -74,20 +61,13 @@ const Index = () => {
             Chat with AI, convert PDFs to practice questions, and solve image problems - all in one place
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              size="lg"
-              onClick={() => navigate('/auth')}
-              className="bg-gradient-primary hover:opacity-90 transition-opacity text-lg px-8 py-6"
-            >
+            <Button size="lg" onClick={() => navigate('/auth')} className="bg-gradient-primary hover:opacity-90 transition-opacity text-lg px-8 py-6">
               Get Started Free
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-              className="border-primary text-primary hover:bg-primary/10 text-lg px-8 py-6"
-            >
+            <Button size="lg" variant="outline" onClick={() => document.getElementById('features')?.scrollIntoView({
+            behavior: 'smooth'
+          })} className="border-primary text-primary hover:bg-primary/10 text-lg px-8 py-6">
               Learn More
             </Button>
           </div>
@@ -105,17 +85,13 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, idx) => (
-              <Card
-                key={idx}
-                className="p-6 bg-background-card border-border shadow-soft hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
+            {features.map((feature, idx) => <Card key={idx} className="p-6 bg-background-card border-border shadow-soft hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in" style={{
+            animationDelay: `${idx * 100}ms`
+          }}>
                 <feature.icon className="w-12 h-12 text-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
 
@@ -131,18 +107,16 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {steps.map((step, idx) => (
-              <div key={idx} className="text-center relative animate-fade-in" style={{ animationDelay: `${idx * 150}ms` }}>
+            {steps.map((step, idx) => <div key={idx} className="text-center relative animate-fade-in" style={{
+            animationDelay: `${idx * 150}ms`
+          }}>
                 <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                   {step.number}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
                 <p className="text-muted-foreground">{step.description}</p>
-                {idx < steps.length - 1 && (
-                  <ArrowRight className="hidden md:block absolute top-8 -right-4 w-8 h-8 text-primary/30" />
-                )}
-              </div>
-            ))}
+                {idx < steps.length - 1 && <ArrowRight className="hidden md:block absolute top-8 -right-4 w-8 h-8 text-primary/30" />}
+              </div>)}
           </div>
         </div>
 
@@ -185,11 +159,7 @@ const Index = () => {
                   <span>Paste it in Questro Settings after signing up</span>
                 </li>
               </ol>
-              <Button
-                variant="outline"
-                className="mt-6 border-primary text-primary hover:bg-primary/10"
-                onClick={() => window.open('https://makersuite.google.com/app/apikey', '_blank')}
-              >
+              <Button variant="outline" className="mt-6 border-primary text-primary hover:bg-primary/10" onClick={() => window.open('https://makersuite.google.com/app/apikey', '_blank')}>
                 Get API Key Now
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -204,13 +174,7 @@ const Index = () => {
                 Watch this quick video to learn how to get your Gemini API key in under 2 minutes!
               </p>
               <div className="aspect-video rounded-lg overflow-hidden bg-background border border-border">
-                <iframe
-                  src="https://www.youtube.com/embed/czN-laeLxr8"
-                  title="How to get Gemini API Key"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full"
-                />
+                <iframe src="https://www.youtube.com/embed/czN-laeLxr8" title="How to get Gemini API Key" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full" />
               </div>
             </Card>
           </div>
@@ -230,19 +194,12 @@ const Index = () => {
               </p>
             </div>
             <div className="space-y-4">
-              {[
-                'Free Gemini API - generous daily limits',
-                'Support for any language',
-                'Upload PDFs up to 50 pages',
-                'Instant image problem solving',
-                'Complete conversation history',
-                'Your API key stays private',
-              ].map((benefit, idx) => (
-                <div key={idx} className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
+              {['Free Gemini API - generous daily limits', 'Support for any language', 'Upload PDFs up to 50 pages', 'Instant image problem solving', 'Complete conversation history', 'Your API key stays private'].map((benefit, idx) => <div key={idx} className="flex items-start gap-3 animate-fade-in" style={{
+              animationDelay: `${idx * 100}ms`
+            }}>
                   <CheckCircle2 className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-lg">{benefit}</span>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </Card>
@@ -254,11 +211,7 @@ const Index = () => {
             <p className="text-lg text-foreground/90 mb-8 max-w-2xl mx-auto">
               Join students worldwide who are already using Questro to ace their studies
             </p>
-            <Button
-              size="lg"
-              onClick={() => navigate('/auth')}
-              className="bg-background text-foreground hover:bg-background/90 transition-all text-lg px-8 py-6"
-            >
+            <Button size="lg" onClick={() => navigate('/auth')} className="bg-background text-foreground hover:bg-background/90 transition-all text-lg px-8 py-6">
               Start Learning Now - It's Free
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
@@ -273,11 +226,9 @@ const Index = () => {
             <Sparkles className="w-5 h-5 text-primary" />
             <span className="font-semibold text-foreground">Questro</span>
           </div>
-          <p className="text-sm">Powered by Lovable AI • Your AI Study Companion</p>
+          <p className="text-sm">Powered by SYA Zone • Your AI Study Companion</p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
