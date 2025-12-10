@@ -6,11 +6,12 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import ChatInterface from '@/components/dashboard/ChatInterface';
 import PdfMcqConverter from '@/components/dashboard/PdfMcqConverter';
 import ImageSolver from '@/components/dashboard/ImageSolver';
+import SmartSummaries from '@/components/dashboard/SmartSummaries';
 import History from '@/components/dashboard/History';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
-  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'history'>('chat');
+  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'summary' | 'history'>('chat');
 
   if (loading) {
     return (
@@ -45,6 +46,7 @@ const Dashboard = () => {
         {activeView === 'chat' && <ChatInterface />}
         {activeView === 'pdf' && <PdfMcqConverter />}
         {activeView === 'image' && <ImageSolver />}
+        {activeView === 'summary' && <SmartSummaries />}
         {activeView === 'history' && <History />}
       </main>
     </div>
