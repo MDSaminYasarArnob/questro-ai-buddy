@@ -8,10 +8,11 @@ import PdfMcqConverter from '@/components/dashboard/PdfMcqConverter';
 import ImageSolver from '@/components/dashboard/ImageSolver';
 import SmartSummaries from '@/components/dashboard/SmartSummaries';
 import History from '@/components/dashboard/History';
+import ApiKeyManager from '@/components/dashboard/ApiKeyManager';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
-  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'summary' | 'history'>('chat');
+  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'summary' | 'history' | 'settings'>('chat');
 
   if (loading) {
     return (
@@ -48,6 +49,7 @@ const Dashboard = () => {
         {activeView === 'image' && <ImageSolver />}
         {activeView === 'summary' && <SmartSummaries />}
         {activeView === 'history' && <History />}
+        {activeView === 'settings' && <ApiKeyManager />}
       </main>
     </div>
   );
