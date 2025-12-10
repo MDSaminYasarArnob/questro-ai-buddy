@@ -92,10 +92,22 @@ const SmartSummaries = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle edge function errors (including 400 status)
+        const errorMessage = error.message || '';
+        if (errorMessage.includes('API key') || errorMessage.includes('api_key')) {
+          toast({
+            title: "API Key Required",
+            description: "Please add your Gemini API key in Settings.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
-      if (data.error) {
-        if (data.error.includes('API key')) {
+      if (data?.error) {
+        if (data.error.includes('API key') || data.error.includes('api_key')) {
           toast({
             title: "API Key Required",
             description: "Please add your Gemini API key in Settings.",
@@ -120,11 +132,21 @@ const SmartSummaries = () => {
       });
     } catch (error: any) {
       console.error('Error generating summary:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate summary.",
-        variant: "destructive",
-      });
+      const errorMsg = error?.message || error?.context?.body || '';
+      
+      if (errorMsg.includes('API key') || errorMsg.includes('api_key')) {
+        toast({
+          title: "API Key Required",
+          description: "Please add your Gemini API key in Settings.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to generate summary. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
