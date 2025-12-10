@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, FileText, Image, History, LogOut, Sparkles, PanelLeft, PanelLeftClose } from 'lucide-react';
+import { MessageSquare, FileText, Image, History, LogOut, Sparkles, PanelLeft, PanelLeftClose, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 interface SidebarProps {
   activeView: string;
-  onViewChange: (view: 'chat' | 'pdf' | 'image' | 'history') => void;
+  onViewChange: (view: 'chat' | 'pdf' | 'image' | 'summary' | 'history') => void;
 }
 
 const Sidebar = ({ activeView, onViewChange }: SidebarProps) => {
@@ -34,6 +34,7 @@ const Sidebar = ({ activeView, onViewChange }: SidebarProps) => {
     { id: 'chat', icon: MessageSquare, label: 'Chat' },
     { id: 'pdf', icon: FileText, label: 'PDF to MCQ' },
     { id: 'image', icon: Image, label: 'Image Solver' },
+    { id: 'summary', icon: BookOpen, label: 'Smart Summaries' },
     { id: 'history', icon: History, label: 'History' },
   ];
 
