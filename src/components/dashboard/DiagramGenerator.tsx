@@ -30,6 +30,7 @@ const DiagramGenerator = () => {
     mermaid.initialize({
       startOnLoad: false,
       theme: 'base',
+      securityLevel: 'loose',
       themeVariables: {
         primaryColor: '#6366f1',
         primaryTextColor: '#ffffff',
@@ -45,15 +46,18 @@ const DiagramGenerator = () => {
         edgeLabelBackground: '#1e1b4b',
         nodeTextColor: '#ffffff',
         textColor: '#ffffff',
+        fontFamily: 'Outfit, sans-serif',
       },
       flowchart: {
         nodeSpacing: 50,
         rankSpacing: 50,
         curve: 'basis',
-        htmlLabels: true,
+        htmlLabels: false, // Use SVG labels instead of HTML for better compatibility
+        useMaxWidth: true,
       },
       mindmap: {
         padding: 16,
+        useMaxWidth: true,
       },
     });
   }, []);
@@ -65,11 +69,33 @@ const DiagramGenerator = () => {
           mermaidRef.current.innerHTML = '';
           const { svg } = await mermaid.render('diagram-' + Date.now(), result.content);
           
+          // Add CSS styles to force text visibility
+          let styledSvg = svg.replace(
+            '<svg',
+            `<svg style="font-family: 'trebuchet ms', verdana, arial, sans-serif;"`
+          );
+          
+          // Force all text elements to be white and visible
+          styledSvg = styledSvg.replace(
+            /<style[^>]*>/,
+            `<style>
+              .node rect, .node circle, .node ellipse, .node polygon, .node path { fill: #6366f1 !important; stroke: #a855f7 !important; }
+              .nodeLabel, .label, text, .edgeLabel { fill: #ffffff !important; color: #ffffff !important; }
+              .node .label { fill: #ffffff !important; color: #ffffff !important; }
+              span.nodeLabel { color: #ffffff !important; }
+              .flowchart-link { stroke: #c084fc !important; }
+              .marker { fill: #c084fc !important; }
+              .mindmap-node rect { fill: #6366f1 !important; stroke: #a855f7 !important; }
+              .mindmap-node .nodeLabel { color: #ffffff !important; }
+              foreignObject div { color: #ffffff !important; }
+            `
+          );
+          
           // Sanitize SVG to prevent XSS attacks
-          const sanitizedSvg = DOMPurify.sanitize(svg, { 
+          const sanitizedSvg = DOMPurify.sanitize(styledSvg, { 
             USE_PROFILES: { svg: true, svgFilters: true },
-            ADD_TAGS: ['use'],
-            ADD_ATTR: ['xlink:href']
+            ADD_TAGS: ['use', 'foreignObject', 'style'],
+            ADD_ATTR: ['xlink:href', 'style']
           });
           
           // Validate that output is actually SVG
@@ -283,7 +309,7 @@ const DiagramGenerator = () => {
               {(result.type === 'flowchart' || result.type === 'mindmap') && (
                 <div 
                   ref={mermaidRef} 
-                  className="bg-surface/30 rounded-xl p-4 overflow-x-auto min-h-[200px] flex items-center justify-center"
+                  className="mermaid-diagram bg-surface/30 rounded-xl p-4 overflow-x-auto min-h-[200px] flex items-center justify-center [&_text]:fill-white [&_.nodeLabel]:!text-white [&_span]:!text-white [&_foreignObject_div]:!text-white [&_.label]:!text-white"
                 />
               )}
 
