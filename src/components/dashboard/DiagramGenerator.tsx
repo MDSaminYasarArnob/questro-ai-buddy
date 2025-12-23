@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Download, Copy, GitBranch, Brain, Workflow, Share2, Sparkles } from 'lucide-react';
 import mermaid from 'mermaid';
+import DOMPurify from 'dompurify';
 
 type DiagramType = 'flowchart' | 'mindmap' | 'diagram' | 'conceptmap';
 
@@ -52,8 +53,21 @@ const DiagramGenerator = () => {
         try {
           mermaidRef.current.innerHTML = '';
           const { svg } = await mermaid.render('diagram-' + Date.now(), result.content);
-          setRenderedSvg(svg);
-          mermaidRef.current.innerHTML = svg;
+          
+          // Sanitize SVG to prevent XSS attacks
+          const sanitizedSvg = DOMPurify.sanitize(svg, { 
+            USE_PROFILES: { svg: true, svgFilters: true },
+            ADD_TAGS: ['use'],
+            ADD_ATTR: ['xlink:href']
+          });
+          
+          // Validate that output is actually SVG
+          if (!sanitizedSvg.trim().startsWith('<svg')) {
+            throw new Error('Invalid SVG output');
+          }
+          
+          setRenderedSvg(sanitizedSvg);
+          mermaidRef.current.innerHTML = sanitizedSvg;
         } catch (error) {
           console.error('Mermaid render error:', error);
           setRenderedSvg('');
