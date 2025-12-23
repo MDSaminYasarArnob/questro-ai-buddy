@@ -29,7 +29,7 @@ const ChatInterface = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const { chats, createChat, updateChat, deleteChat, renameChat } = useLocalChatHistory();
 
@@ -164,13 +164,24 @@ const ChatInterface = () => {
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
     try {
+      if (!session?.access_token) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to use the chat",
+          variant: "destructive",
+        });
+        setMessages(prev => prev.slice(0, -1));
+        setLoading(false);
+        return;
+      }
+
       const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
       
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ 
           messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
