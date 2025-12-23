@@ -69,6 +69,15 @@ export const useLocalChatHistory = () => {
     saveToStorage(updatedChats);
   }, [chats, saveToStorage]);
 
+  const renameChat = useCallback((chatId: string, newTitle: string) => {
+    const updatedChats = chats.map(chat => 
+      chat.id === chatId 
+        ? { ...chat, title: newTitle, updated_at: new Date().toISOString() }
+        : chat
+    );
+    saveToStorage(updatedChats);
+  }, [chats, saveToStorage]);
+
   const getChat = useCallback((chatId: string): LocalChatHistory | undefined => {
     return chats.find(chat => chat.id === chatId);
   }, [chats]);
@@ -78,6 +87,7 @@ export const useLocalChatHistory = () => {
     createChat,
     updateChat,
     deleteChat,
+    renameChat,
     getChat,
   };
 };
