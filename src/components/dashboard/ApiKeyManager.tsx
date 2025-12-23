@@ -6,15 +6,30 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Key, Eye, EyeOff, Trash2, Save, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Key, Eye, EyeOff, Trash2, Save, ExternalLink, LogOut, Settings } from 'lucide-react';
 
 const ApiKeyManager = () => {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      navigate('/auth');
+    }
+  };
 
   useEffect(() => {
     loadApiKey();
@@ -106,11 +121,26 @@ const ApiKeyManager = () => {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-2">API Key Settings</h2>
-        <p className="text-muted-foreground">
-          Manage your Gemini API key to use Questro's features
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
+              <Settings className="w-6 h-6 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold neon-text">Settings</h2>
+          </div>
+          <p className="text-muted-foreground">
+            Manage your account and API keys
+          </p>
+        </div>
+        <Button
+          onClick={handleSignOut}
+          variant="destructive"
+          className="gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </Button>
       </div>
 
       <Card className="p-6 bg-background-card border-border shadow-soft mb-6">

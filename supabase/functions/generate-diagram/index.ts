@@ -58,49 +58,67 @@ serve(async (req) => {
 Task:
 Generate a ${type} for the topic: "${topic}".
 
-Supported types:
-- flowchart
-- mind map
-- diagram
-- concept map
-
-Rules (VERY IMPORTANT):
+CRITICAL RULES:
 - Output ONLY the required structured format
 - Use short, clear, exam-friendly terms
-- No explanations
-- No markdown code blocks
-- No extra text
-- Keep it simple and logical
+- No explanations before or after
+- No markdown code blocks (no \`\`\`)
+- No extra text or commentary
+- Keep it simple and educational
 
-Output format rules by type:
+OUTPUT FORMAT BY TYPE:
 
 If type = flowchart:
 - Use Mermaid.js flowchart syntax
 - Direction: Top to Bottom (TD)
-- Short labels (max 4–5 words)
+- Use SHORT labels (2-5 words max) inside nodes
+- Every node MUST have text inside: A[Text Here] or B{Text Here}
 - Start directly with: flowchart TD
+- Example format:
+flowchart TD
+    A[Start Process] --> B{Decision Point}
+    B -->|Yes| C[Action One]
+    B -->|No| D[Action Two]
+    C --> E[End]
+    D --> E
 
-If type = mind map:
+If type = mindmap:
 - Use Mermaid.js mindmap syntax
-- Central topic in the center
-- 2–3 levels depth
-- Keywords only
+- Central topic first, then branches
+- Keep 2-3 levels of depth
+- Use concise keywords (2-4 words)
 - Start directly with: mindmap
+- Example format:
+mindmap
+  root((Main Topic))
+    Branch One
+      Sub item A
+      Sub item B
+    Branch Two
+      Sub item C
+    Branch Three
 
 If type = diagram:
 - Output numbered labels only
-- Each label max 6 words
-- Suitable for science/geography diagrams
-- Format: 1. Label\\n2. Label\\n etc.
+- Each label should be 2-6 words
+- Format each on new line: 1. Label Name
+- Suitable for labeling parts of a diagram
+- Example:
+1. Cell Membrane
+2. Nucleus
+3. Cytoplasm
 
-If type = concept map:
-- Use arrows (→) to show relationships
-- Mention relation in brackets
-- Keep hierarchy or cause–effect structure
-- Format: Concept1 →(relation)→ Concept2
+If type = conceptmap:
+- Show relationships between concepts
+- Format: Concept (relationship)→ Related Concept
+- Each relationship on new line
+- Use clear relationship words in parentheses
+- Example:
+Sun (provides energy to)→ Plants
+Plants (produce)→ Oxygen
+Animals (breathe)→ Oxygen
 
-Level:
-School student (simple & clear)`;
+Level: School student (simple, clear, educational)`;
 
     console.log(`Generating ${type} for topic: ${topic}`);
 
