@@ -1,16 +1,16 @@
 project_id = "irqfyjrlpfpdjztvxahs"
 
 [functions.chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.solve-image]
-verify_jwt = false
+verify_jwt = true
 
 [functions.convert-pdf-mcq]
-verify_jwt = false
+verify_jwt = true
 
 [functions.smart-summary]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-diagram]
-verify_jwt = false
+verify_jwt = true
