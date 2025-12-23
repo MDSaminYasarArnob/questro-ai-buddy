@@ -7,12 +7,13 @@ import ChatInterface from '@/components/dashboard/ChatInterface';
 import PdfMcqConverter from '@/components/dashboard/PdfMcqConverter';
 import ImageSolver from '@/components/dashboard/ImageSolver';
 import SmartSummaries from '@/components/dashboard/SmartSummaries';
+import DiagramGenerator from '@/components/dashboard/DiagramGenerator';
 import History from '@/components/dashboard/History';
 import ApiKeyManager from '@/components/dashboard/ApiKeyManager';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
-  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'summary' | 'history' | 'settings'>('chat');
+  const [activeView, setActiveView] = useState<'chat' | 'pdf' | 'image' | 'summary' | 'diagram' | 'history' | 'settings'>('chat');
 
   if (loading) {
     return (
@@ -48,6 +49,7 @@ const Dashboard = () => {
         {activeView === 'pdf' && <PdfMcqConverter />}
         {activeView === 'image' && <ImageSolver />}
         {activeView === 'summary' && <SmartSummaries />}
+        {activeView === 'diagram' && <DiagramGenerator />}
         {activeView === 'history' && <History />}
         {activeView === 'settings' && <ApiKeyManager />}
       </main>
