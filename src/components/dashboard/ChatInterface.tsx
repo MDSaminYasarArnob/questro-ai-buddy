@@ -31,7 +31,7 @@ const ChatInterface = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { chats, createChat, updateChat, deleteChat } = useLocalChatHistory();
+  const { chats, createChat, updateChat, deleteChat, renameChat } = useLocalChatHistory();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -117,6 +117,11 @@ const ChatInterface = () => {
     if (currentChatId === chatId) {
       handleNewChat();
     }
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleRenameChat = (chatId: string, newTitle: string) => {
+    renameChat(chatId, newTitle);
     setRefreshTrigger(prev => prev + 1);
   };
 
@@ -466,6 +471,7 @@ const ChatInterface = () => {
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
         chats={chats}
         refreshTrigger={refreshTrigger}
       />
