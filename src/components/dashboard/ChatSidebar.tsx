@@ -136,7 +136,7 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, onDeleteChat, cha
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 transition-all duration-300 hover:bg-destructive/10 hover:text-destructive text-muted-foreground/60 hover:text-destructive rounded-lg shrink-0"
+                    className="h-8 w-8 bg-destructive/20 hover:bg-destructive/30 text-destructive rounded-lg shrink-0"
                     onClick={(e) => handleDelete(e, chat.id)}
                   >
                     <Trash2 className="w-4 h-4" />
