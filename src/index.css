@@ -169,3 +169,52 @@
 .hover-lift:hover {
   transform: translateY(-2px);
 }
+
+/* Mermaid Diagram Text Visibility Fix */
+.mermaid-diagram text {
+  fill: #ffffff !important;
+}
+
+.mermaid-diagram .nodeLabel {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+.mermaid-diagram .label {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+.mermaid-diagram foreignObject div {
+  color: #ffffff !important;
+}
+
+.mermaid-diagram span {
+  color: #ffffff !important;
+}
+
+.mermaid-diagram .edgeLabel {
+  background-color: #1e1b4b !important;
+  color: #ffffff !important;
+}
+
+.mermaid-diagram .edgeLabel span {
+  color: #ffffff !important;
+}
+
+.mermaid-diagram .node rect,
+.mermaid-diagram .node circle,
+.mermaid-diagram .node ellipse,
+.mermaid-diagram .node polygon {
+  fill: #6366f1 !important;
+  stroke: #a855f7 !important;
+}
+
+.mermaid-diagram .mindmap-node rect {
+  fill: #6366f1 !important;
+  stroke: #a855f7 !important;
+}
+
+.mermaid-diagram .mindmap-node .nodeLabel {
+  color: #ffffff !important;
+}
