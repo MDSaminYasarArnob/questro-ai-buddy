@@ -29,20 +29,31 @@ const DiagramGenerator = () => {
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: 'base',
       themeVariables: {
-        primaryColor: '#a855f7',
-        primaryTextColor: '#fff',
-        primaryBorderColor: '#c084fc',
+        primaryColor: '#6366f1',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#a855f7',
         lineColor: '#c084fc',
-        secondaryColor: '#1e1b4b',
-        tertiaryColor: '#312e81',
+        secondaryColor: '#4f46e5',
+        tertiaryColor: '#7c3aed',
         background: '#0a0a0f',
-        mainBkg: '#1e1b4b',
+        mainBkg: '#6366f1',
         nodeBorder: '#c084fc',
         clusterBkg: '#1e1b4b',
-        titleColor: '#fff',
+        titleColor: '#ffffff',
         edgeLabelBackground: '#1e1b4b',
+        nodeTextColor: '#ffffff',
+        textColor: '#ffffff',
+      },
+      flowchart: {
+        nodeSpacing: 50,
+        rankSpacing: 50,
+        curve: 'basis',
+        htmlLabels: true,
+      },
+      mindmap: {
+        padding: 16,
       },
     });
   }, []);
@@ -277,11 +288,58 @@ const DiagramGenerator = () => {
               )}
 
               {/* Text-based diagrams */}
-              {(result.type === 'diagram' || result.type === 'conceptmap') && (
+              {result.type === 'diagram' && (
                 <div className="bg-surface/30 rounded-xl p-6">
-                  <pre className="whitespace-pre-wrap text-sm text-foreground font-mono leading-relaxed">
-                    {result.content}
-                  </pre>
+                  <div className="space-y-3">
+                    {result.content.split('\n').filter(line => line.trim()).map((line, index) => (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-surface/50 rounded-lg border border-border/30">
+                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">
+                          {index + 1}
+                        </span>
+                        <span className="text-foreground pt-1">{line.replace(/^\d+\.\s*/, '')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.type === 'conceptmap' && (
+                <div className="bg-surface/30 rounded-xl p-6">
+                  <div className="space-y-4">
+                    {result.content.split('\n').filter(line => line.trim()).map((line, index) => {
+                      // Parse concept map format: Concept1 (relation)→ Concept2
+                      const parts = line.split('→');
+                      if (parts.length >= 2) {
+                        const from = parts[0].trim();
+                        const to = parts.slice(1).join('→').trim();
+                        const relationMatch = from.match(/(.+?)\s*\((.+?)\)\s*$/);
+                        
+                        return (
+                          <div key={index} className="flex items-center gap-3 flex-wrap">
+                            <div className="px-4 py-2 bg-primary/20 border border-primary/40 rounded-xl text-foreground font-medium">
+                              {relationMatch ? relationMatch[1].trim() : from}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-0.5 bg-accent"></div>
+                              <span className="text-xs px-2 py-1 bg-accent/20 rounded-full text-accent font-medium">
+                                {relationMatch ? relationMatch[2] : 'relates to'}
+                              </span>
+                              <div className="w-8 h-0.5 bg-accent"></div>
+                              <span className="text-accent">→</span>
+                            </div>
+                            <div className="px-4 py-2 bg-accent/20 border border-accent/40 rounded-xl text-foreground font-medium">
+                              {to}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={index} className="px-4 py-2 bg-surface/50 rounded-lg text-foreground">
+                          {line}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
