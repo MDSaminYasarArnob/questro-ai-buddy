@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const { imageBase64 } = await req.json();
 
-    // Get user's API key from the database
+    // Verify authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -37,35 +37,17 @@ serve(async (req) => {
       );
     }
 
-    const { data: apiKeyData, error: keyError } = await supabase
-      .from('api_keys')
-      .select('api_key')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (keyError || !apiKeyData?.api_key) {
+    // Use Lovable AI - no user API key needed
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not configured');
       return new Response(
-        JSON.stringify({ error: 'Please add your Gemini API key in Settings' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'AI service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const GEMINI_API_KEY = apiKeyData.api_key;
-
-    console.log('Processing image with Gemini API...');
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { 
-                text: `You are Questro AI - an expert problem solver. Analyze the image and provide complete, detailed solutions.
+    const systemPrompt = `You are Questro AI - an expert problem solver. Analyze the image and provide complete, detailed solutions.
 
 **CRITICAL:** Respond in the SAME language as any text in the image. If the image contains Hindi, respond in Hindi. If English, respond in English.
 
@@ -90,34 +72,39 @@ serve(async (req) => {
 - Extract relevant data
 - Apply appropriate analysis
 
-Solve EVERY question in the image systematically. Give ONE clear answer per question - no repetition.` 
-              },
+Solve EVERY question in the image systematically. Give ONE clear answer per question - no repetition.`;
+
+    console.log('Processing image with Lovable AI...');
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Analyze this image and solve any questions or problems shown.' },
               {
-                inline_data: {
-                  mime_type: 'image/jpeg',
-                  data: imageBase64
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${imageBase64}`
                 }
               }
             ]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
           }
-        })
-      }
-    );
+        ],
+      }),
+    });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Gemini API error:', response.status, error);
-      
-      if (response.status === 400 && error.includes('API_KEY_INVALID')) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid API key. Please check your Gemini API key in Settings.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      const errorText = await response.text();
+      console.error('Lovable AI error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -126,14 +113,21 @@ Solve EVERY question in the image systematically. Give ONE clear answer per ques
         );
       }
       
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please try again later.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Failed to analyze image. Please check your API key.' }),
+        JSON.stringify({ error: 'Failed to analyze image. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
-    const solution = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No solution generated';
+    const solution = data.choices?.[0]?.message?.content || 'No solution generated';
 
     console.log('Solution generated successfully');
 

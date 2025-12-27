@@ -39,71 +39,6 @@ Return your response as a valid JSON object with this exact structure:
 
 IMPORTANT: Return ONLY the JSON object, no markdown code blocks, no extra text.`;
 
-async function callGeminiAPI(geminiApiKey: string, text: string | null, pdfBase64: string | null) {
-  const parts: any[] = [{ text: systemPrompt }];
-
-  if (pdfBase64) {
-    parts.push({
-      inline_data: {
-        mime_type: "application/pdf",
-        data: pdfBase64
-      }
-    });
-    parts.push({ text: "Analyze this PDF document and provide the summary in the specified JSON format." });
-  } else if (text) {
-    parts.push({ text: `Analyze this text and provide the summary in the specified JSON format:\n\n${text}` });
-  }
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 8192,
-        },
-      }),
-    }
-  );
-
-  return response;
-}
-
-async function callLovableAI(text: string | null, pdfBase64: string | null) {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY is not configured');
-  }
-
-  let userContent = "";
-  if (pdfBase64) {
-    // For PDF, we need to describe it since Lovable AI doesn't support inline PDF
-    userContent = "I have uploaded a PDF document. Please analyze it and provide a comprehensive summary. Note: Due to technical limitations, I'm providing text extracted from the PDF instead of the raw file.";
-  } else if (text) {
-    userContent = `Analyze this text and provide the summary in the specified JSON format:\n\n${text}`;
-  }
-
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userContent }
-      ],
-    }),
-  });
-
-  return response;
-}
-
 function parseAIResponse(responseText: string) {
   let cleanedText = responseText.trim();
   if (cleanedText.startsWith('```json')) {
@@ -153,12 +88,12 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),
@@ -166,71 +101,69 @@ serve(async (req) => {
       );
     }
 
-    // Try to get user's Gemini API key
-    const { data: apiKeyData } = await supabase
-      .from('api_keys')
-      .select('api_key')
-      .eq('user_id', user.id)
-      .single();
+    // Use Lovable AI - no user API key needed
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: 'AI service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    let responseText: string | null = null;
-    let usedFallback = false;
+    console.log('Using Lovable AI gateway...');
 
-    // Try Gemini API first if user has a key
-    if (apiKeyData?.api_key) {
-      console.log('Trying user Gemini API key...');
-      const geminiResponse = await callGeminiAPI(apiKeyData.api_key, text, pdfBase64);
-
-      if (geminiResponse.ok) {
-        const data = await geminiResponse.json();
-        responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      } else if (geminiResponse.status === 429) {
-        console.log('Gemini API rate limited, falling back to Lovable AI...');
-        usedFallback = true;
-      } else if (geminiResponse.status === 400) {
-        const errorText = await geminiResponse.text();
-        if (errorText.includes('API_KEY_INVALID')) {
-          console.log('Invalid Gemini API key, falling back to Lovable AI...');
-          usedFallback = true;
-        } else {
-          throw new Error(`Gemini API error: ${geminiResponse.status}`);
+    let userContent: any;
+    if (pdfBase64) {
+      userContent = [
+        { type: 'text', text: 'Analyze this PDF document and provide the summary in the specified JSON format.' },
+        {
+          type: 'image_url',
+          image_url: {
+            url: `data:application/pdf;base64,${pdfBase64}`
+          }
         }
-      } else {
-        console.error('Gemini API error:', geminiResponse.status);
-        usedFallback = true;
-      }
+      ];
     } else {
-      console.log('No Gemini API key found, using Lovable AI...');
-      usedFallback = true;
+      userContent = `Analyze this text and provide the summary in the specified JSON format:\n\n${text}`;
     }
 
-    // Fallback to Lovable AI
-    if (usedFallback || !responseText) {
-      console.log('Using Lovable AI gateway...');
-      const lovableResponse = await callLovableAI(text, pdfBase64);
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent }
+        ],
+      }),
+    });
 
-      if (!lovableResponse.ok) {
-        const errorText = await lovableResponse.text();
-        console.error('Lovable AI error:', lovableResponse.status, errorText);
-        
-        if (lovableResponse.status === 429) {
-          return new Response(
-            JSON.stringify({ error: 'AI service rate limit exceeded. Please try again in a few moments.' }),
-            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        if (lovableResponse.status === 402) {
-          return new Response(
-            JSON.stringify({ error: 'AI service credits exhausted. Please try again later.' }),
-            { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        throw new Error(`AI gateway error: ${lovableResponse.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Lovable AI error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'AI service rate limit exceeded. Please try again in a few moments.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
-
-      const data = await lovableResponse.json();
-      responseText = data.choices?.[0]?.message?.content;
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI service credits exhausted. Please try again later.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw new Error(`AI gateway error: ${response.status}`);
     }
+
+    const data = await response.json();
+    const responseText = data.choices?.[0]?.message?.content;
 
     if (!responseText) {
       throw new Error('No response from AI');

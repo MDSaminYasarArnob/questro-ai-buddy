@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const { messages, fileBase64, fileType } = await req.json();
     
-    // Get user's API key from the database
+    // Verify authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -38,29 +38,15 @@ serve(async (req) => {
       );
     }
 
-    // Get user's Gemini API key
-    const { data: apiKeyData, error: keyError } = await supabase
-      .from('api_keys')
-      .select('api_key')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (keyError) {
-      console.error('Error fetching API key:', keyError);
+    // Use Lovable AI - no user API key needed
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not configured');
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch API key' }),
+        JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    if (!apiKeyData?.api_key) {
-      return new Response(
-        JSON.stringify({ error: 'Please add your Gemini API key in Settings to use the chat' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const GEMINI_API_KEY = apiKeyData.api_key;
 
     const systemPrompt = `You are Questro AI - an intelligent AI assistant for solving questions across all domains.
 
@@ -80,71 +66,56 @@ serve(async (req) => {
 
 Remember: ONE clear answer per question. No repetition. Match the user's language.`;
 
-    // Build content based on whether there's a file
-    let contents: any[];
-    
-    if (fileBase64 && fileType) {
-      const lastMessage = messages[messages.length - 1];
-      const messageText = lastMessage?.content || 'Analyze this file and solve any questions or problems shown.';
+    // Build messages for Lovable AI
+    const aiMessages: any[] = [
+      { role: 'system', content: systemPrompt }
+    ];
+
+    // Add conversation history
+    for (let i = 0; i < messages.length; i++) {
+      const m = messages[i];
+      const isLast = i === messages.length - 1;
       
-      contents = [
-        { role: 'user', parts: [{ text: systemPrompt }] },
-        { role: 'model', parts: [{ text: 'I understand. I will follow these guidelines.' }] },
-        ...messages.slice(0, -1).map((m: any) => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }]
-        })),
-        {
+      if (isLast && fileBase64 && fileType) {
+        // For the last message with a file, include the image
+        aiMessages.push({
           role: 'user',
-          parts: [
-            { text: messageText },
+          content: [
+            { type: 'text', text: m.content || 'Analyze this file and solve any questions or problems shown.' },
             {
-              inline_data: {
-                mime_type: fileType,
-                data: fileBase64
+              type: 'image_url',
+              image_url: {
+                url: `data:${fileType};base64,${fileBase64}`
               }
             }
           ]
-        }
-      ];
-    } else {
-      contents = [
-        { role: 'user', parts: [{ text: systemPrompt }] },
-        { role: 'model', parts: [{ text: 'I understand. I will follow these guidelines.' }] },
-        ...messages.map((m: any) => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }]
-        }))
-      ];
+        });
+      } else {
+        aiMessages.push({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content
+        });
+      }
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
-          },
-        }),
-      }
-    );
+    console.log('Calling Lovable AI gateway...');
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: aiMessages,
+        stream: true,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      
-      if (response.status === 400 && errorText.includes('API_KEY_INVALID')) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid API key. Please check your Gemini API key in Settings.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      console.error('Lovable AI error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -152,61 +123,22 @@ Remember: ONE clear answer per question. No repetition. Match the user's languag
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please try again later.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
       return new Response(
-        JSON.stringify({ error: 'Failed to get AI response. Please check your API key.' }),
+        JSON.stringify({ error: 'Failed to get AI response. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Transform Gemini SSE to OpenAI-compatible format
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
-    const encoder = new TextEncoder();
-
-    (async () => {
-      const reader = response.body!.getReader();
-      const decoder = new TextDecoder();
-      
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonStr = line.slice(6).trim();
-              if (!jsonStr) continue;
-              
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) {
-                  const openAIFormat = {
-                    choices: [{
-                      delta: { content: text }
-                    }]
-                  };
-                  await writer.write(encoder.encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
-                }
-              } catch (e) {
-                // Skip malformed JSON
-              }
-            }
-          }
-        }
-        await writer.write(encoder.encode('data: [DONE]\n\n'));
-      } catch (e) {
-        console.error('Stream error:', e);
-      } finally {
-        await writer.close();
-      }
-    })();
-
-    return new Response(readable, {
+    // Stream the response directly
+    return new Response(response.body, {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
   } catch (error) {
