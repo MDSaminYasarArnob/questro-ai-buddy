@@ -44,11 +44,32 @@ const ChatInterface = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
+    // Expanded image format support
+    const validImageTypes = [
+      'image/jpeg', 
+      'image/png', 
+      'image/webp', 
+      'image/gif',
+      'image/bmp',
+      'image/svg+xml',
+      'image/tiff',
+      'image/avif',
+      'image/heic',
+      'image/heif'
+    ];
+    const validDocTypes = ['application/pdf'];
+    const validTypes = [...validImageTypes, ...validDocTypes];
+    
+    // Also check by extension for formats that may not have correct MIME type
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'tiff', 'tif', 'avif', 'heic', 'heif', 'pdf'];
+    
+    const isValidType = validTypes.includes(file.type) || validExtensions.includes(extension || '');
+    
+    if (!isValidType) {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image (JPG, PNG, WEBP) or PDF file",
+        description: "Please upload an image (JPG, PNG, WEBP, GIF, BMP, SVG, TIFF, AVIF, HEIC) or PDF file",
         variant: "destructive",
       });
       return;
@@ -65,7 +86,11 @@ const ChatInterface = () => {
 
     setUploadedFile(file);
     
-    if (file.type.startsWith('image/')) {
+    // Generate preview for image files
+    const isImage = validImageTypes.includes(file.type) || 
+      ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'tiff', 'tif', 'avif'].includes(extension || '');
+    
+    if (isImage) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setFilePreview(reader.result as string);
@@ -442,7 +467,7 @@ const ChatInterface = () => {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml,image/tiff,image/avif,image/heic,image/heif,application/pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.svg,.tiff,.tif,.avif,.heic,.heif,.pdf"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
