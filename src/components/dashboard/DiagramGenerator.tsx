@@ -5,11 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Download, Copy, GitBranch, Brain, Workflow, Share2, Sparkles } from 'lucide-react';
+import { Loader2, Download, Copy, Workflow, Share2, Sparkles } from 'lucide-react';
 import mermaid from 'mermaid';
 import DOMPurify from 'dompurify';
 
-type DiagramType = 'flowchart' | 'mindmap' | 'diagram' | 'conceptmap';
+type DiagramType = 'flowchart' | 'conceptmap';
 
 interface DiagramResult {
   type: DiagramType;
@@ -72,7 +72,7 @@ const DiagramGenerator = () => {
 
   useEffect(() => {
     const renderMermaid = async () => {
-      if (result && (result.type === 'flowchart' || result.type === 'mindmap') && mermaidRef.current) {
+      if (result && result.type === 'flowchart' && mermaidRef.current) {
         try {
           mermaidRef.current.innerHTML = '';
           const { svg } = await mermaid.render('diagram-' + Date.now(), result.content);
@@ -298,8 +298,6 @@ const DiagramGenerator = () => {
 
   const diagramTypes = [
     { value: 'flowchart', label: 'Flowchart', icon: Workflow, description: 'Step-by-step process flow' },
-    { value: 'mindmap', label: 'Mind Map', icon: Brain, description: 'Hierarchical idea mapping' },
-    { value: 'diagram', label: 'Diagram Labels', icon: GitBranch, description: 'Numbered labels for diagrams' },
     { value: 'conceptmap', label: 'Concept Map', icon: Share2, description: 'Relationship-based mapping' },
   ];
 
@@ -314,7 +312,7 @@ const DiagramGenerator = () => {
             </div>
             <h1 className="text-3xl font-bold neon-text">Diagram Generator</h1>
           </div>
-          <p className="text-muted-foreground">Create educational diagrams, flowcharts, and mind maps</p>
+          <p className="text-muted-foreground">Create educational diagrams and flowcharts</p>
         </div>
 
         {/* Input Card */}
@@ -341,7 +339,7 @@ const DiagramGenerator = () => {
             {/* Diagram Type Selection */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Diagram Type</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {diagramTypes.map((type) => (
                   <button
                     key={type.value}
@@ -389,8 +387,6 @@ const DiagramGenerator = () => {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">
                 {result.type === 'flowchart' && 'Flowchart'}
-                {result.type === 'mindmap' && 'Mind Map'}
-                {result.type === 'diagram' && 'Diagram Labels'}
                 {result.type === 'conceptmap' && 'Concept Map'}
                 : {result.topic}
               </CardTitle>
@@ -407,28 +403,13 @@ const DiagramGenerator = () => {
             </CardHeader>
             <CardContent>
               {/* Mermaid Render */}
-              {(result.type === 'flowchart' || result.type === 'mindmap') && (
+              {result.type === 'flowchart' && (
                 <div 
                   ref={mermaidRef} 
                   className="mermaid-diagram bg-gradient-to-br from-surface/40 via-surface/20 to-primary/5 rounded-2xl p-8 overflow-x-auto min-h-[300px] flex items-center justify-center border border-border/30 backdrop-blur-sm shadow-xl [&_svg]:max-w-full [&_text]:fill-white [&_.nodeLabel]:!text-white [&_span]:!text-white [&_foreignObject_div]:!text-white [&_.label]:!text-white"
                 />
               )}
 
-              {/* Text-based diagrams */}
-              {result.type === 'diagram' && (
-                <div className="bg-surface/30 rounded-xl p-6">
-                  <div className="space-y-3">
-                    {result.content.split('\n').filter(line => line.trim()).map((line, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 bg-surface/50 rounded-lg border border-border/30">
-                        <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">
-                          {index + 1}
-                        </span>
-                        <span className="text-foreground pt-1">{line.replace(/^\d+\.\s*/, '')}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {result.type === 'conceptmap' && (
                 <div className="bg-surface/30 rounded-xl p-6">
