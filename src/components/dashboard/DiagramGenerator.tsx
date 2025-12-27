@@ -302,17 +302,17 @@ const DiagramGenerator = () => {
   ];
 
   return (
-    <div className="h-full p-6 animate-fade-in">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="h-full p-3 sm:p-4 md:p-6 animate-fade-in">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
-              <Workflow className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-primary flex items-center justify-center animate-pulse-glow">
+              <Workflow className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold neon-text">Diagram Generator</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold neon-text">Diagram Generator</h1>
           </div>
-          <p className="text-muted-foreground">Create educational diagrams and flowcharts</p>
+          <p className="text-muted-foreground text-sm hidden sm:block">Create educational diagrams and flowcharts</p>
         </div>
 
         {/* Input Card */}

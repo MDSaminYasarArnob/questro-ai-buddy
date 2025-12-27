@@ -109,15 +109,15 @@ const PdfMcqConverter = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8 animate-fade-in">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-white" />
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
+      <div className="mb-4 sm:mb-6 md:mb-8 animate-fade-in">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-primary flex items-center justify-center">
+            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold neon-text">PDF to MCQ Quiz</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold neon-text">PDF to MCQ Quiz</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
               Transform your study materials into interactive quizzes
             </p>
           </div>
@@ -125,20 +125,20 @@ const PdfMcqConverter = () => {
       </div>
 
       {questions.length === 0 ? (
-        <Card className="glass-card glow-border rounded-2xl p-8 mb-6">
+        <Card className="glass-card glow-border rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6">
           {!pdfFile ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center mb-6">
-                <FileText className="w-12 h-12 text-primary" />
+            <div className="flex flex-col items-center justify-center py-6 sm:py-8 md:py-12">
+              <div className="w-16 h-16 sm:w-20 md:w-24 sm:h-20 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center mb-4 sm:mb-6">
+                <FileText className="w-8 h-8 sm:w-10 md:w-12 sm:h-10 md:h-12 text-primary" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2 text-foreground">Upload Your PDF</h3>
-              <p className="text-muted-foreground text-center mb-8 max-w-md">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-foreground text-center">Upload Your PDF</h3>
+              <p className="text-muted-foreground text-center mb-4 sm:mb-6 md:mb-8 max-w-md text-sm sm:text-base px-4">
                 Upload your textbook or study material. AI will generate MCQs for you to practice.
               </p>
               
               <label htmlFor="pdf-upload" className="cursor-pointer">
-                <div className="neon-button inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white">
-                  <Upload className="w-5 h-5" />
+                <div className="neon-button inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-white text-sm sm:text-base">
+                  <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                   Choose PDF File
                 </div>
                 <input
