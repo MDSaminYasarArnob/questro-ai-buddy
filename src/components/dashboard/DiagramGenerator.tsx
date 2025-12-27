@@ -32,31 +32,39 @@ const DiagramGenerator = () => {
       theme: 'base',
       securityLevel: 'loose',
       themeVariables: {
-        primaryColor: '#6366f1',
+        // Modern gradient-inspired color palette
+        primaryColor: '#8b5cf6',
         primaryTextColor: '#ffffff',
-        primaryBorderColor: '#a855f7',
-        lineColor: '#c084fc',
-        secondaryColor: '#4f46e5',
-        tertiaryColor: '#7c3aed',
-        background: '#0a0a0f',
-        mainBkg: '#6366f1',
-        nodeBorder: '#c084fc',
-        clusterBkg: '#1e1b4b',
+        primaryBorderColor: '#a78bfa',
+        lineColor: '#c4b5fd',
+        secondaryColor: '#6366f1',
+        tertiaryColor: '#a855f7',
+        background: 'transparent',
+        mainBkg: '#8b5cf6',
+        nodeBorder: '#a78bfa',
+        clusterBkg: 'rgba(139, 92, 246, 0.1)',
         titleColor: '#ffffff',
-        edgeLabelBackground: '#1e1b4b',
+        edgeLabelBackground: 'rgba(30, 27, 75, 0.9)',
         nodeTextColor: '#ffffff',
-        textColor: '#ffffff',
-        fontFamily: 'Outfit, sans-serif',
+        textColor: '#f8fafc',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px',
+        // Flowchart specific
+        nodeBkg: '#8b5cf6',
+        // Mind map specific
+        mindmapTextColor: '#ffffff',
       },
       flowchart: {
-        nodeSpacing: 50,
-        rankSpacing: 50,
+        nodeSpacing: 60,
+        rankSpacing: 70,
         curve: 'basis',
-        htmlLabels: false, // Use SVG labels instead of HTML for better compatibility
+        htmlLabels: true,
         useMaxWidth: true,
+        padding: 20,
+        diagramPadding: 8,
       },
       mindmap: {
-        padding: 16,
+        padding: 20,
         useMaxWidth: true,
       },
     });
@@ -69,27 +77,120 @@ const DiagramGenerator = () => {
           mermaidRef.current.innerHTML = '';
           const { svg } = await mermaid.render('diagram-' + Date.now(), result.content);
           
-          // Add CSS styles to force text visibility
+          // Add premium styling to SVG
           let styledSvg = svg.replace(
             '<svg',
-            `<svg style="font-family: 'trebuchet ms', verdana, arial, sans-serif;"`
+            `<svg style="font-family: 'Inter', system-ui, sans-serif; font-weight: 500;"`
           );
           
-          // Force all text elements to be white and visible
-          styledSvg = styledSvg.replace(
-            /<style[^>]*>/,
-            `<style>
-              .node rect, .node circle, .node ellipse, .node polygon, .node path { fill: #6366f1 !important; stroke: #a855f7 !important; }
-              .nodeLabel, .label, text, .edgeLabel { fill: #ffffff !important; color: #ffffff !important; }
-              .node .label { fill: #ffffff !important; color: #ffffff !important; }
-              span.nodeLabel { color: #ffffff !important; }
-              .flowchart-link { stroke: #c084fc !important; }
-              .marker { fill: #c084fc !important; }
-              .mindmap-node rect { fill: #6366f1 !important; stroke: #a855f7 !important; }
-              .mindmap-node .nodeLabel { color: #ffffff !important; }
-              foreignObject div { color: #ffffff !important; }
-            `
-          );
+          // Inject comprehensive modern styles
+          const modernStyles = `
+            /* Node styling - modern glassmorphic look */
+            .node rect, .node circle, .node ellipse, .node polygon {
+              fill: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%) !important;
+              fill: #8b5cf6 !important;
+              stroke: #a78bfa !important;
+              stroke-width: 2px !important;
+              rx: 12px !important;
+              ry: 12px !important;
+              filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.3)) !important;
+            }
+            
+            /* Diamond/decision nodes */
+            .node polygon {
+              fill: #6366f1 !important;
+              stroke: #818cf8 !important;
+            }
+            
+            /* Text styling - crisp and readable */
+            .nodeLabel, .label, text, .edgeLabel, .node text {
+              fill: #ffffff !important;
+              color: #ffffff !important;
+              font-weight: 600 !important;
+              font-size: 13px !important;
+              letter-spacing: 0.01em !important;
+            }
+            
+            span.nodeLabel, foreignObject div, foreignObject span {
+              color: #ffffff !important;
+              font-weight: 600 !important;
+              font-size: 13px !important;
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+            }
+            
+            /* Edge labels */
+            .edgeLabel rect {
+              fill: rgba(30, 27, 75, 0.95) !important;
+              stroke: #6366f1 !important;
+              stroke-width: 1px !important;
+              rx: 8px !important;
+              ry: 8px !important;
+            }
+            
+            .edgeLabel text, .edgeLabel span {
+              fill: #e2e8f0 !important;
+              color: #e2e8f0 !important;
+              font-size: 11px !important;
+              font-weight: 500 !important;
+            }
+            
+            /* Flow lines - smooth gradient feel */
+            .flowchart-link, path.path {
+              stroke: #c4b5fd !important;
+              stroke-width: 2px !important;
+            }
+            
+            /* Arrow markers */
+            .marker, marker path {
+              fill: #c4b5fd !important;
+              stroke: #c4b5fd !important;
+            }
+            
+            /* Mind map specific styling */
+            .mindmap-node rect, .mindmap-node circle {
+              fill: #8b5cf6 !important;
+              stroke: #a78bfa !important;
+              stroke-width: 2px !important;
+              rx: 16px !important;
+              ry: 16px !important;
+              filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.25)) !important;
+            }
+            
+            .mindmap-node .nodeLabel {
+              color: #ffffff !important;
+              font-weight: 600 !important;
+            }
+            
+            /* Mind map root node - make it stand out */
+            .mindmap-node:first-of-type rect {
+              fill: #7c3aed !important;
+              stroke: #8b5cf6 !important;
+              stroke-width: 3px !important;
+              filter: drop-shadow(0 6px 20px rgba(124, 58, 237, 0.4)) !important;
+            }
+            
+            /* Mind map branches */
+            .mindmap-edge, .mindmap path {
+              stroke: #a78bfa !important;
+              stroke-width: 2px !important;
+            }
+            
+            /* Clusters/subgraphs */
+            .cluster rect {
+              fill: rgba(139, 92, 246, 0.08) !important;
+              stroke: rgba(167, 139, 250, 0.4) !important;
+              stroke-width: 2px !important;
+              rx: 16px !important;
+              ry: 16px !important;
+            }
+            
+            .cluster text {
+              fill: #c4b5fd !important;
+              font-weight: 600 !important;
+            }
+          `;
+          
+          styledSvg = styledSvg.replace(/<style[^>]*>/, `<style>${modernStyles}`);
           
           // Sanitize SVG to prevent XSS attacks
           const sanitizedSvg = DOMPurify.sanitize(styledSvg, { 
@@ -309,7 +410,7 @@ const DiagramGenerator = () => {
               {(result.type === 'flowchart' || result.type === 'mindmap') && (
                 <div 
                   ref={mermaidRef} 
-                  className="mermaid-diagram bg-surface/30 rounded-xl p-4 overflow-x-auto min-h-[200px] flex items-center justify-center [&_text]:fill-white [&_.nodeLabel]:!text-white [&_span]:!text-white [&_foreignObject_div]:!text-white [&_.label]:!text-white"
+                  className="mermaid-diagram bg-gradient-to-br from-surface/40 via-surface/20 to-primary/5 rounded-2xl p-8 overflow-x-auto min-h-[300px] flex items-center justify-center border border-border/30 backdrop-blur-sm shadow-xl [&_svg]:max-w-full [&_text]:fill-white [&_.nodeLabel]:!text-white [&_span]:!text-white [&_foreignObject_div]:!text-white [&_.label]:!text-white"
                 />
               )}
 
