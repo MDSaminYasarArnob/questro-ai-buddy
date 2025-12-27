@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { LocalChatHistory } from '@/hooks/useLocalChatHistory';
+import { ChatHistory } from '@/hooks/useChatHistory';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,12 +26,11 @@ import { cn } from '@/lib/utils';
 
 interface ChatSidebarProps {
   currentChatId: string | null;
-  onSelectChat: (chat: LocalChatHistory | null) => void;
+  onSelectChat: (chat: ChatHistory | null) => void;
   onNewChat: () => void;
   onDeleteChat: (chatId: string) => void;
   onRenameChat?: (chatId: string, newTitle: string) => void;
-  chats: LocalChatHistory[];
-  refreshTrigger: number;
+  chats: ChatHistory[];
 }
 
 const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, onDeleteChat, onRenameChat, chats }: ChatSidebarProps) => {
@@ -49,7 +48,7 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, onDeleteChat, onR
     });
   };
 
-  const handleStartEdit = (e: React.MouseEvent, chat: LocalChatHistory) => {
+  const handleStartEdit = (e: React.MouseEvent, chat: ChatHistory) => {
     e.stopPropagation();
     setEditingChatId(chat.id);
     setEditTitle(chat.title);

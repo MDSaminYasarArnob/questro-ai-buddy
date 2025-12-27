@@ -3,9 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Loader2, Copy, Check, Paperclip, X, Sparkles, Bot, User } from 'lucide-react';
+import { Send, Loader2, Copy, Check, Paperclip, X, Bot, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useLocalChatHistory, LocalChatHistory } from '@/hooks/useLocalChatHistory';
+import { useChatHistory, ChatHistory } from '@/hooks/useChatHistory';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -26,12 +26,11 @@ const ChatInterface = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user, session } = useAuth();
   const { toast } = useToast();
-  const { chats, createChat, updateChat, deleteChat, renameChat } = useLocalChatHistory();
+  const { chats, createChat, updateChat, deleteChat, renameChat, refresh } = useChatHistory();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -97,7 +96,7 @@ const ChatInterface = () => {
     }
   };
 
-  const handleSelectChat = (chat: LocalChatHistory | null) => {
+  const handleSelectChat = (chat: ChatHistory | null) => {
     if (chat) {
       setCurrentChatId(chat.id);
       setMessages(chat.messages || []);
@@ -112,17 +111,15 @@ const ChatInterface = () => {
     setFilePreview(null);
   };
 
-  const handleDeleteChat = (chatId: string) => {
-    deleteChat(chatId);
+  const handleDeleteChat = async (chatId: string) => {
+    await deleteChat(chatId);
     if (currentChatId === chatId) {
       handleNewChat();
     }
-    setRefreshTrigger(prev => prev + 1);
   };
 
-  const handleRenameChat = (chatId: string, newTitle: string) => {
-    renameChat(chatId, newTitle);
-    setRefreshTrigger(prev => prev + 1);
+  const handleRenameChat = async (chatId: string, newTitle: string) => {
+    await renameChat(chatId, newTitle);
   };
 
   const handleSend = async () => {
@@ -259,17 +256,17 @@ const ChatInterface = () => {
       const finalMessages = [...updatedMessages, { role: 'assistant' as const, content: assistantResponse }];
       
       if (currentChatId) {
-        updateChat(currentChatId, finalMessages);
+        await updateChat(currentChatId, finalMessages);
       } else {
         const historyTitle = currentFile 
           ? `File: ${currentFile.name.substring(0, 30)}`
           : userMessage.substring(0, 50);
           
-        const newId = createChat(historyTitle, finalMessages);
-        setCurrentChatId(newId);
+        const newId = await createChat(historyTitle, finalMessages);
+        if (newId) {
+          setCurrentChatId(newId);
+        }
       }
-      
-      setRefreshTrigger(prev => prev + 1);
 
     } catch (error: any) {
       setMessages(prev => prev.slice(0, -1));
@@ -477,14 +474,13 @@ const ChatInterface = () => {
       </div>
 
       {/* Chat Sidebar */}
-      <ChatSidebar 
+      <ChatSidebar
         currentChatId={currentChatId}
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
         chats={chats}
-        refreshTrigger={refreshTrigger}
       />
     </div>
   );
