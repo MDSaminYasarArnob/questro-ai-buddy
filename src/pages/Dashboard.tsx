@@ -44,7 +44,8 @@ const Dashboard = () => {
       
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
       
-      <main className="flex-1 overflow-y-auto relative z-10">
+      {/* Main content with mobile header offset */}
+      <main className="flex-1 overflow-y-auto relative z-10 pt-14 md:pt-0">
         {activeView === 'chat' && <ChatInterface />}
         {activeView === 'pdf' && <PdfMcqConverter />}
         {activeView === 'image' && <ImageSolver />}

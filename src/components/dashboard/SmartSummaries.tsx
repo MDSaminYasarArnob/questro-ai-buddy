@@ -153,14 +153,14 @@ const SmartSummaries = () => {
   };
 
   return (
-    <div className="h-full flex flex-col p-6">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold neon-text flex items-center gap-3">
-          <BookOpen className="w-8 h-8 text-primary" />
+    <div className="h-full flex flex-col p-3 sm:p-4 md:p-6">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold neon-text flex items-center gap-2 sm:gap-3">
+          <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           Smart Summaries
         </h2>
-        <p className="text-muted-foreground mt-2">
-          Paste text or upload a PDF to get AI-powered summaries, key points, mind maps, and chapter breakdowns.
+        <p className="text-muted-foreground mt-2 text-xs sm:text-sm md:text-base">
+          Paste text or upload a PDF to get AI-powered summaries, key points, and chapter breakdowns.
         </p>
       </div>
 

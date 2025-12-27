@@ -86,7 +86,7 @@ const ChatSidebar = ({ currentChatId, onSelectChat, onNewChat, onDeleteChat, onR
   };
 
   return (
-    <div className="relative flex h-full">
+    <div className="relative hidden lg:flex h-full">
       {/* Toggle Button */}
       <Button
         variant="ghost"

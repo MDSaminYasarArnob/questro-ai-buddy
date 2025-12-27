@@ -83,36 +83,36 @@ const ImageSolver = () => {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8 animate-fade-in">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center">
-            <Camera className="w-6 h-6 text-white" />
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
+      <div className="mb-4 sm:mb-6 md:mb-8 animate-fade-in">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-primary flex items-center justify-center">
+            <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-3xl font-bold neon-text">Image Question Solver</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold neon-text">Image Question Solver</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
               Snap, upload, and get step-by-step solutions instantly
             </p>
           </div>
         </div>
       </div>
 
-      <Card className="glass-card glow-border rounded-2xl p-8 mb-6">
-        <div className="flex flex-col items-center justify-center py-8">
+      <Card className="glass-card glow-border rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6">
+        <div className="flex flex-col items-center justify-center py-4 sm:py-6 md:py-8">
           {!imagePreview ? (
             <>
-              <div className="w-24 h-24 rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center mb-6">
-                <ImageIcon className="w-12 h-12 text-primary" />
+              <div className="w-16 h-16 sm:w-20 md:w-24 sm:h-20 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center mb-4 sm:mb-6">
+                <ImageIcon className="w-8 h-8 sm:w-10 md:w-12 sm:h-10 md:h-12 text-primary" />
               </div>
-              <h3 className="text-2xl font-semibold mb-2 text-foreground">Upload Question Image</h3>
-              <p className="text-muted-foreground text-center mb-8 max-w-md">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-foreground text-center">Upload Question Image</h3>
+              <p className="text-muted-foreground text-center mb-4 sm:mb-6 md:mb-8 max-w-md text-sm sm:text-base px-4">
                 Take a photo or upload an image of your questions. AI will solve them step-by-step.
               </p>
               
               <label htmlFor="image-upload" className="cursor-pointer">
-                <div className="neon-button inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white">
-                  <Upload className="w-5 h-5" />
+                <div className="neon-button inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-white text-sm sm:text-base">
+                  <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                   Choose Image
                 </div>
                 <input

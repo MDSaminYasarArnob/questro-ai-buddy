@@ -306,34 +306,34 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex flex-col md:flex-row">
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col p-6">
+      <div className="flex-1 flex flex-col p-3 sm:p-4 md:p-6">
 
-        <div className="mb-6 animate-fade-in">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-primary flex items-center justify-center shrink-0">
-              <Bot className="w-8 h-8 text-white" />
+        <div className="mb-4 md:mb-6 animate-fade-in">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <div className="w-10 h-10 sm:w-12 md:w-14 sm:h-12 md:h-14 rounded-xl sm:rounded-2xl bg-gradient-primary flex items-center justify-center shrink-0">
+              <Bot className="w-5 h-5 sm:w-6 md:w-8 sm:h-6 md:h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold neon-text">AI Chat Assistant</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold neon-text">AI Chat Assistant</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                 Your intelligent study companion powered by advanced AI
               </p>
             </div>
           </div>
         </div>
 
-        <Card className="flex-1 flex flex-col glass-card glow-border rounded-2xl overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <Card className="flex-1 flex flex-col glass-card glow-border rounded-xl sm:rounded-2xl overflow-hidden min-h-0">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
             {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-                <div className="w-24 h-24 rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center">
-                  <Bot className="w-12 h-12 text-primary" />
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-4 md:space-y-6 px-2">
+                <div className="w-16 h-16 sm:w-20 md:w-24 sm:h-20 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-card border border-primary/30 flex items-center justify-center">
+                  <Bot className="w-8 h-8 sm:w-10 md:w-12 sm:h-10 md:h-12 text-primary" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-foreground">Start a conversation</h3>
-                  <p className="text-muted-foreground max-w-md">
+                  <h3 className="text-lg sm:text-xl font-semibold text-foreground">Start a conversation</h3>
+                  <p className="text-muted-foreground text-sm max-w-md">
                     Ask me anything about your studies. I can help with math, science, coding, and more!
                   </p>
                 </div>
@@ -342,7 +342,7 @@ const ChatInterface = () => {
                     <button
                       key={i}
                       onClick={() => setMessage(suggestion)}
-                      className="px-4 py-2 rounded-xl text-sm font-medium glass-card border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-colors duration-200 text-muted-foreground hover:text-foreground"
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium glass-card border border-border/50 hover:border-primary/50 hover:bg-primary/10 transition-colors duration-200 text-muted-foreground hover:text-foreground"
                     >
                       {suggestion}
                     </button>
@@ -354,22 +354,22 @@ const ChatInterface = () => {
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`flex gap-4 animate-fade-in ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                    className={`flex gap-2 sm:gap-3 md:gap-4 animate-fade-in ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                   >
-                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                    <div className={`shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center ${
                       msg.role === 'user' 
                         ? 'bg-gradient-primary' 
                         : 'glass-card border border-primary/30'
                     }`}>
                       {msg.role === 'user' ? (
-                        <User className="w-5 h-5 text-white" />
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       ) : (
-                        <Bot className="w-5 h-5 text-primary" />
+                        <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                       )}
                     </div>
-                    <div className={`flex flex-col max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className={`flex flex-col max-w-[85%] sm:max-w-[80%] md:max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                       <div
-                        className={`p-4 rounded-2xl ${
+                        className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl ${
                           msg.role === 'user'
                             ? 'neon-button text-white rounded-tr-sm'
                             : 'glass-card border border-border/50 text-foreground rounded-tl-sm'
@@ -421,20 +421,20 @@ const ChatInterface = () => {
             )}
           </div>
 
-          <div className="p-4 border-t border-border/50 bg-background/80">
+          <div className="p-2 sm:p-3 md:p-4 border-t border-border/50 bg-background/80">
             {uploadedFile && (
-              <div className="mb-3 p-3 glass-card rounded-xl flex items-center justify-between border border-border/50">
-                <div className="flex items-center gap-3">
+              <div className="mb-2 sm:mb-3 p-2 sm:p-3 glass-card rounded-lg sm:rounded-xl flex items-center justify-between border border-border/50">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   {filePreview ? (
-                    <img src={filePreview} alt="Preview" className="w-12 h-12 rounded-lg object-cover" />
+                    <img src={filePreview} alt="Preview" className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover shrink-0" />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-                      <Paperclip className="w-6 h-6 text-primary" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                      <Paperclip className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
                   )}
-                  <div className="text-sm">
-                    <p className="font-medium text-foreground">{uploadedFile.name}</p>
-                    <p className="text-muted-foreground">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <div className="text-sm min-w-0">
+                    <p className="font-medium text-foreground truncate">{uploadedFile.name}</p>
+                    <p className="text-muted-foreground text-xs sm:text-sm">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 </div>
                 <Button
@@ -442,20 +442,20 @@ const ChatInterface = () => {
                   size="sm"
                   onClick={removeFile}
                   disabled={loading}
-                  className="hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                  className="hover:bg-destructive/10 hover:text-destructive rounded-lg shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             )}
             
-            <div className="flex gap-3">
-              <div className="flex-1 space-y-3">
+            <div className="flex gap-2 sm:gap-3">
+              <div className="flex-1 space-y-2 sm:space-y-3">
                 <Textarea
                   placeholder="Ask me anything..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="glass-card border-border/50 focus:border-primary/50 resize-none rounded-xl min-h-[80px] text-foreground placeholder:text-muted-foreground"
+                  className="glass-card border-border/50 focus:border-primary/50 resize-none rounded-lg sm:rounded-xl min-h-[60px] sm:min-h-[80px] text-sm sm:text-base text-foreground placeholder:text-muted-foreground"
                   rows={2}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -476,21 +476,22 @@ const ChatInterface = () => {
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loading || !!uploadedFile}
-                  className="glass-card border-border/50 hover:border-primary/50 hover:bg-primary/10 rounded-xl"
+                  className="glass-card border-border/50 hover:border-primary/50 hover:bg-primary/10 rounded-lg sm:rounded-xl text-xs sm:text-sm"
                 >
-                  <Paperclip className="w-4 h-4 mr-2 text-primary" />
-                  Attach File
+                  <Paperclip className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-primary" />
+                  <span className="hidden xs:inline">Attach</span>
+                  <span className="xs:hidden">📎</span>
                 </Button>
               </div>
               <Button
                 onClick={handleSend}
                 disabled={loading || (!message.trim() && !uploadedFile)}
-                className="neon-button rounded-xl self-end h-12 w-12 p-0"
+                className="neon-button rounded-lg sm:rounded-xl self-end h-10 w-10 sm:h-12 sm:w-12 p-0 shrink-0"
               >
                 {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                 ) : (
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </Button>
             </div>
